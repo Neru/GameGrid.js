@@ -1,3 +1,8 @@
+function GameGrid(canvas) {
+   	if (!(canvas instanceof HTMLCanvasElement))
+   		throw "Not an HTML Canvas";
+}
+
 
 //pattern: http://www.yuiblog.com/blog/2007/06/12/module-pattern/
 MapGrid = function() {
@@ -684,5 +689,3 @@ MapGrid = function() {
 
 
 	//http://adomas.org/javascript-mouse-wheel/
-
-*/
