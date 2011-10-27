@@ -1,11 +1,5 @@
-function GameGrid(canvas) {
-   	if (!(canvas instanceof HTMLCanvasElement))
-   		throw "Not an HTML Canvas";
-}
-
-
-//pattern: http://www.yuiblog.com/blog/2007/06/12/module-pattern/
-MapGrid = function() {
+function GameGrid(newCanvas) {
+	
 	var canvas;
 	var context;
 	var canvasWidth;
@@ -16,7 +10,7 @@ MapGrid = function() {
 	var cellWidth = 50;
 	var lineWidth;
 	
-	var lineWidthFunction = function(cellWidth) {
+	var lineWidthFunction = function (cellWidth) {
 		return 1;
 	};
 
@@ -39,11 +33,13 @@ MapGrid = function() {
 	
 	var gridCellClicked;
 	var cellWidthChanged;
+	
+	var that = this;
 
 	var repaint = function() {
 		alert(canvasWidth + " " + canvasHeight + " " + gridColumns + " " + gridRows);
-		alert(cellWidth + " " + lineWidth + " " + MapGrid.getGridWidth() + " " + MapGrid.getGridHeight());
-		alert(MapGrid.getXShift() + " " + MapGrid.getYShift());
+		alert(cellWidth + " " + lineWidth + " " + that.getGridWidth() + " " + that.getGridHeight());
+		alert(that.getXShift() + " " + that.getYShift());
 		context.fillStyle = "#c00";
 		context.fillRect(0, 0, canvasWidth, canvasHeight);
 		//context.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -51,40 +47,35 @@ MapGrid = function() {
 		// vertical lines:
 		// | | | |
 		// | | | |
-		for(var i = 0; i <= gridColumns; i++) {
-			context.moveTo(MapGrid.getXShift() + (lineWidth / 2) + i * (cellWidth + lineWidth), MapGrid.getYShift());
-			context.lineTo(MapGrid.getXShift() + (lineWidth / 2) + i * (cellWidth + lineWidth), MapGrid.getYShift() + MapGrid.getGridHeight());
+		for (var i = 0; i <= gridColumns; i++) {
+			context.moveTo(that.getXShift() + (lineWidth / 2) + i * (cellWidth + lineWidth), that.getYShift());
+			context.lineTo(that.getXShift() + (lineWidth / 2) + i * (cellWidth + lineWidth), that.getYShift() + that.getGridHeight());
 		}
 		// horizontal lines:
 		//  _ _ _
 		//  _ _ _
 		//  _ _ _
-		for(var j = 0; j <= gridRows; j++) {
-			context.moveTo(MapGrid.getXShift(), MapGrid.getYShift() + (lineWidth / 2) + j * (cellWidth + lineWidth));
-			context.lineTo(MapGrid.getXShift() + MapGrid.getGridWidth(), MapGrid.getYShift() + (lineWidth / 2) + j * (cellWidth + lineWidth));
+		for (var j = 0; j <= gridRows; j++) {
+			context.moveTo(that.getXShift(), that.getYShift() + (lineWidth / 2) + j * (cellWidth + lineWidth));
+			context.lineTo(that.getXShift() + that.getGridWidth(), that.getYShift() + (lineWidth / 2) + j * (cellWidth + lineWidth));
 		}
 		context.stroke();
 	};
 	
-	var minMaxCheck = function(min, max, value) {
-		if(value < min)
-			throw "New Value too small."
-		if(value > max)
-			throw "New Value too large."
-	}
-	
-	var canvasClicked = function(e) {
-		var point = getClickedPointOnCanvas(e);
-		point = getClickedGridCell(point);
-		//trigger callback
-		gridCellClicked(point);
+	var minMaxCheck = function (min, max, value) {
+		if (value < min) {
+			throw "New Value too small.";
+		}
+		if (value > max) {
+			throw "New Value too large.";			
+		}
 	};
 	
-	//from http://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element
+		//from http://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element
 	var getClickedPointOnCanvas = function(e) {
 		var x;
 		var y;
-		if(e.pageX != undefined && e.pageY != undefined) {
+		if (e.pageX !== undefined && e.pageY !== undefined) {
 			x = e.pageX;
 			y = e.pageY;
 		} else {
@@ -99,38 +90,48 @@ MapGrid = function() {
 	};
 	
 	var getClickedGridCell = function(clickedPoint) {
-		var x = clickedPoint.x - MapGrid.getXShift();
-		var y = clickedPoint.y - MapGrid.getYShift();
+		var x = clickedPoint.x - that.getXShift();
+		var y = clickedPoint.y - that.getYShift();
 
 		var d = lineWidth + cellWidth;
 
 		// clicked point lies outside the grid
-		if(x <= 0 || x > gridColumns * d)
+		if (x <= 0 || x > gridColumns * d) {
 			return {x: -1, y: -1};
-		if(y <= 0 || y > gridRows * d)
+		}
+		if (y <= 0 || y > gridRows * d) {
 			return {x: -1, y: -1};
+		}
 
 		var i = -1;
 		var j = -1;
 
-		while(x >= lineWidth) {
+		while (x >= lineWidth) {
 			x -= d;
 			i++;
 		}
-		while(y >= lineWidth) {
+		while (y >= lineWidth) {
 			y -= d;
 			j++;
 		}
 
 		//clicked point lies on grid line
-		if(x >= 0 || y >= 0)
+		if (x >= 0 || y >= 0) {
 			return {x: -1, y: -1};
+		}
 
 		return {x: i, y: j};
 	};
 	
+	var canvasClicked = function (e) {
+		var point = getClickedPointOnCanvas(e);
+		point = getClickedGridCell(point);
+		//trigger callback
+		gridCellClicked(point);
+	};
+	
 	var changeLineWidth = function (newCellWidth) {
-		newLineWidth = lineWidthFunction(newCellWidth);
+		var newLineWidth = lineWidthFunction(newCellWidth);
 		
 		positiveIntegerCheck(newLineWidth);
 		minMaxCheck(minLineWidth, maxLineWidth, newLineWidth);
@@ -144,24 +145,60 @@ MapGrid = function() {
 		}
 		
 		setLineWidth(newLineWidth);		
+	};
+	
+	this.getGridWidth = function() {
+			return lineWidth + gridColumns * (cellWidth + lineWidth);
+	};
+
+	this.getGridHeight = function() {
+		return lineWidth + gridRows * (cellWidth + lineWidth);
+	};
+
+	this.getXShift = function() {
+		return Math.floor((canvasWidth - that.getGridWidth()) / 2);
+	};
+
+	this.getYShift = function() {
+		return Math.floor((canvasHeight - that.getGridHeight()) / 2);
+	};
+	
+	if (!(newCanvas instanceof HTMLCanvasElement)) {
+		throw "Not an HTML Canvas";
 	}
+	
+	canvas = newCanvas;
+	context = canvas.getContext('2d');
+	canvasWidth = 480;
+	canvasHeight = 480;
+	lineWidth = context.lineWidth = 1;
+	
+	var widthFactor = Math.sqrt(canvasWidth / canvas.width);
+	var heightFactor = Math.sqrt(canvasHeight / canvas.height);
+	
+	canvasWidth = canvas.width;
+	canvasHeight = canvas.height;
+	
+	if (widthFactor > heightFactor) {
+		cellWidth = Math.floor(cellWidth / widthFactor);
+	} else {
+		cellWidth = Math.floor(cellWidth / heightFactor);	
+	}
+	
+	gridColumns = Math.floor((canvasWidth - lineWidth) / (cellWidth + lineWidth));
+	gridRows = Math.floor((canvasHeight - lineWidth) / (cellWidth + lineWidth));
+
+	repaint();
+	
+	//event.on("cellSizeChanged", changeLineWidth);
+}
+/*
+
+//pattern: http://www.yuiblog.com/blog/2007/06/12/module-pattern/
+MapGrid = function() {
+
 
 	return {	
-		getGridWidth : function() {
-			return lineWidth + gridColumns * (cellWidth + lineWidth);
-		},
-
-		getGridHeight: function() {
-			return lineWidth + gridRows * (cellWidth + lineWidth);
-		},
-
-		getXShift: function() {
-			return Math.floor((canvasWidth - MapGrid.getGridWidth()) / 2);
-		},
-
-		getYShift: function() {
-			return Math.floor((canvasHeight - MapGrid.getGridHeight()) / 2);
-		},
 		
 		getMinCanvasWidth: function() {
 			return minCanvasWidth;
@@ -412,7 +449,7 @@ MapGrid = function() {
 			case "canvasOnResize":
 				var newCanvasWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
 				
-				if (newCanvasWidth < minCanvasWidth) 		
+				if (newCanvasWidth < minCanvasWidth)
 					newCanvasWidth = minCanvasWidth;
 				else if (newCanvasWidth > maxCanvasWidth) 
 					newCanvasWidth = maxCanvasWidth;
@@ -449,7 +486,7 @@ MapGrid = function() {
 			case "canvasOnResize":
 				var newCanvasHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
 				
-				if (newCanvasHeight < minCanvasHeight) 		
+				if (newCanvasHeight < minCanvasHeight)
 					newCanvasHeight = minCanvasHeight;
 				else if (newCanvasHeight > maxCanvasHeight) {
 					newCanvasHeight = maxCanvasHeight;
@@ -488,7 +525,7 @@ MapGrid = function() {
 			case "canvasOnResize":
 				var newCanvasWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
 				
-				if (newCanvasWidth < minCanvasWidth) 		
+				if (newCanvasWidth < minCanvasWidth)
 					newCanvasWidth = minCanvasWidth;
 				else if (newCanvasWidth > maxCanvasWidth) {
 					newCanvasWidth = maxCanvasWidth;
@@ -497,7 +534,7 @@ MapGrid = function() {
 				
 				var newCanvasHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
 				
-				if (newCanvasHeight < minCanvasHeight) 		
+				if (newCanvasHeight < minCanvasHeight)
 					newCanvasHeight = minCanvasHeight;
 				else if (newCanvasHeight > maxCanvasHeight) {
 					newCanvasHeight = maxCanvasHeight;
@@ -634,14 +671,7 @@ MapGrid = function() {
 		},
 		
 		setCanvas : function(ncanvas) {
-			canvas = ncanvas;
-			context = canvas.getContext('2d');
-			canvasWidth = canvas.width = 480;
-			canvasHeight = canvas.height = 480;
-			lineWidth = context.lineWidth = 1;
-			repaint();
-			
-			event.on("cellSizeChanged", changeLineWidth);
+
 		},
 		
 		drawMapObject : function(xCoord, yCoord, imageURL) {
@@ -660,7 +690,7 @@ MapGrid = function() {
 		 * Forwards the clicked cell coordinates on the map grid.
 		 * When the clicked point lies outside the grid or on a grid line,
 		 * -1 -1 will be returned.
-		 */
+		 
 		addClickedGridCellListener: function(callback) {
 			gridCellClicked = callback;			
 			canvas.addEventListener("mousedown", canvasClicked, false);
@@ -672,7 +702,7 @@ MapGrid = function() {
 		}
 	}
 }();
-
+*/
 
 /*
 	var canvas2 = $('<canvas/>').attr({

@@ -16,13 +16,13 @@ html, body {
 
 	//spinner http://www.switchonthecode.com/tutorials/javascript-controls-the-spin-control
 	//event emitter
-	
-	var mapGrid;
 
 	function init() {
 		var canvas = document.getElementById("canvas");
 		//canvas.onkeypress = keyPressed;
-		var gameGrid = new GameGrid(new Object());
+		canvas.height = 1000;
+		canvas.width = 100;
+		var gameGrid = new GameGrid(canvas);
 		//MapGrid.drawMapObject(0, 1, "http://127.0.0.1:8020/RPG-API%20Client/WebContent/Door.png");
 		
 		// MapGrid.addClickedGridCellListener(function(point) {
@@ -41,7 +41,7 @@ html, body {
        var charCode = evt.which;
        var charStr = String.fromCharCode(charCode);
        
-       switch(charStr) {
+       switch (charStr) {
        	case "a":
 	       	var x = mapGrid.getGridColumns();
 	       	mapGrid.setGridColumns(x + 1);
