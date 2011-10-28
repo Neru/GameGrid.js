@@ -15,7 +15,6 @@ html, body {
 <script type="text/javascript">
 
 	//spinner http://www.switchonthecode.com/tutorials/javascript-controls-the-spin-control
-	//event emitter
 
 	function init() {
 		var canvas = document.getElementById("canvas");
@@ -43,8 +42,8 @@ html, body {
        
        switch (charStr) {
        	case "a":
-	       	var x = mapGrid.getGridColumns();
-	       	mapGrid.setGridColumns(x + 1);
+	       	var x = gameGrid.getGridColumns();
+	       	gameGrid.setGridColumns(x + 1);
 
        	break;
        }

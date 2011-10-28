@@ -1,14 +1,29 @@
+/**
+ * TODO:
+ * events: event emitter api
+ * max min checks
+ * point on canvas -> current cell, [line, outside grid] (click, drag, mouse over)
+ * weights (^1/2) for changeCanvasSize
+ */
+
 function GameGrid(newCanvas) {
 	
-	var canvas;
-	var context;
-	var canvasWidth;
-	var canvasHeight;
+	if (!(newCanvas instanceof HTMLCanvasElement)) {
+		throw "Not an HTML Canvas";
+	}
+	
+	var canvas = newCanvas;
+	var context = canvas.getContext('2d');
+	var canvasWidth = 480;
+	var canvasHeight = 480;
 
 	var gridColumns = 9; //x
 	var gridRows = 9; //y
 	var cellWidth = 50;
-	var lineWidth;
+	var lineWidth = context.lineWidth = 1;
+	
+	var widthFactor = Math.sqrt(canvasWidth / canvas.width);
+	var heightFactor = Math.sqrt(canvasHeight / canvas.height);
 	
 	var lineWidthFunction = function (cellWidth) {
 		return 1;
@@ -19,17 +34,13 @@ function GameGrid(newCanvas) {
 	var minCanvasHeight = 1;
 	var maxCanvasHeight = Number.MAX_VALUE;
 	var minGridColumns = 1;
-	var maxGridColumns = 100;
+	var maxGridColumns = Number.MAX_VALUE;
 	var minGridRows = 1;
-	var maxGridRows = 100;
+	var maxGridRows = Number.MAX_VALUE;
 	var minCellWidth = 1;
-	var maxCellWidth = 1000;
+	var maxCellWidth = Number.MAX_VALUE;
 	var minLineWidth = 0;
-	var maxLineWidth = 10;
-
-	var canvasOnResize = false;
-	var cellWidthOnResize = true;
-	var squareNumberOnResize = false;
+	var maxLineWidth = Number.MAX_VALUE;
 	
 	var gridCellClicked;
 	var cellWidthChanged;
@@ -65,13 +76,12 @@ function GameGrid(newCanvas) {
 	var minMaxCheck = function (min, max, value) {
 		if (value < min) {
 			throw "New Value too small.";
-		}
-		if (value > max) {
+		} else if (value > max) {
 			throw "New Value too large.";			
 		}
 	};
 	
-		//from http://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element
+	//from http://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element
 	var getClickedPointOnCanvas = function(e) {
 		var x;
 		var y;
@@ -148,7 +158,7 @@ function GameGrid(newCanvas) {
 	};
 	
 	this.getGridWidth = function() {
-			return lineWidth + gridColumns * (cellWidth + lineWidth);
+		return lineWidth + gridColumns * (cellWidth + lineWidth);
 	};
 
 	this.getGridHeight = function() {
@@ -163,18 +173,165 @@ function GameGrid(newCanvas) {
 		return Math.floor((canvasHeight - that.getGridHeight()) / 2);
 	};
 	
-	if (!(newCanvas instanceof HTMLCanvasElement)) {
-		throw "Not an HTML Canvas";
-	}
+	this.getMinCanvasWidth = function () {
+		return minCanvasWidth;
+	};
+
+	this.getCanvasWidth = function() {
+		return canvas.width;
+	};
 	
-	canvas = newCanvas;
-	context = canvas.getContext('2d');
-	canvasWidth = 480;
-	canvasHeight = 480;
-	lineWidth = context.lineWidth = 1;
+	this.getMaxCanvasWidth = function() {
+		return maxCanvasWidth;
+	};
 	
-	var widthFactor = Math.sqrt(canvasWidth / canvas.width);
-	var heightFactor = Math.sqrt(canvasHeight / canvas.height);
+	this.getMinCanvasHeight = function() {
+		return minCanvasHeight;
+	};
+	
+	this.getCanvasHeight = function() {
+		return canvas.height;
+	};
+	
+	this.getMaxCanvasHeight = function() {
+		return maxCanvasHeight;
+	};
+	
+	this.getMinGridColumns = function() {
+		return minGridColumns;
+	};
+
+	this.getGridColumns = function() {
+		return gridColumns;
+	};
+	
+	this.getMaxGridColumns = function() {
+		return maxGridColumns;
+	};
+	
+	this.getMinGridRows = function() {
+		return minGridRows;
+	};
+	
+	this.getGridRows = function() {
+		return gridRows;
+	};
+	
+	this.getMaxGridRows = function() {
+		return maxGridRows;
+	};
+	
+	this.getMinCellWidth = function() {
+		return minCellWidth;
+	};
+	
+	this.getCellWidth = function() {
+		return cellWidth;
+	};
+	
+	this.getMaxCellWidth = function() {
+		return maxCellWidth;
+	};
+	
+	this.getMinLineWidth = function() {
+		return minLineWidth;
+	};
+	
+	this.getLineWidth = function() {
+		return lineWidth;
+	};
+	
+	this.getMaxLineWidth = function() {
+		return maxLineWidth;
+	};
+	
+	this.setMinCanvasWidth = function (newMinCanvasWidth) {
+		minCheck(newMinCanvasWidth, canvasWidth);
+		minCanvasWidth = newMinCanvasWidth;
+	};
+	
+	this.setCanvasWidth = function (newCanvasWidth) {
+		canvas.width = newCanvasWidth;
+		canvasWidth = newCanvasWidth;
+	};
+	
+	this.setMaxCanvasWidth = function (newMaxCanvasWidth) {
+		maxCheck(newMaxCanvasWidth, canvasWidth);
+		maxCanvasWidth = newMaxCanvasWidth;
+	};
+	
+	this.setMinCanvasHeight = function (newMinCanvasHeight) {
+		minCheck(newMinCanvasHeight, canvasHeight);
+		minCanvasHeight = newMinCanvasHeight;
+	};
+		
+	this.setCanvasHeight = function (newCanvasHeight) {
+		canvas.height = newCanvasHeight;
+		canvasHeight = newCanvasHeight;
+	};
+	
+	this.setMaxCanvasHeight = function (newMaxCanvasHeight) {
+		maxCheck(newMaxCanvasHeight, canvasHeight);
+		maxCanvasHeight = newMaxCanvasHeight;
+	};
+		
+	this.setMinGridColumns = function (newMinGridColumns) {
+		minCheck(newMinGridColumns, gridColumns);
+		minGridColumns = newMinGridColumns;
+	};
+	
+	this.setGridColumns = function (newGridColumns) {
+		gridColumns = newGridColumns;
+	};
+	
+	this.setMaxGridColumns = function (newMaxGridColumns) {
+		maxCheck(newMaxGridColumns, gridColumns);
+		maxGridColumns = newMaxGridColumns;
+	};
+	
+	this.setMinGridRows = function (newMinGridRows) {
+		minCheck(newMinGridRows, gridRows);
+		minGridRows = newMinGridRows;
+	};
+	
+	this.setGridRows = function (newGridRows) {
+		gridRows = newGridRows;
+	};
+	
+	this.setMaxGridRows = function (newMaxGridRows) {
+		maxCheck(newMaxGridRows, gridRows);
+		maxGridRows = newMaxGridRows;
+	};
+	
+	this.setMinCellWidth= function (newMinCellWidth) {
+		minCheck(newMinCellWidth, cellWidth);
+		minCellWidth = newMinCellWidth;
+	};
+	
+	this.setCellWidth= function (newCellWidth) {
+		cellWidth = newCellWidth;
+		//TODO event.emit("cellSizeChanged"; newCellWidth);
+	};
+		
+	this.setMaxCellWidth= function (newMaxCellWidth) {
+		maxCheck(newMaxCellWidth, cellWidth);
+		maxCellWidth = newMaxCellWidth;
+	}; 
+	
+	this.setMinLineWidth = function (newMinLineWidth) {
+		minCheck(newMinLineWidth, lineWidth);
+		minLineWidth = newMinLineWidth;
+	};
+	
+	this.setLineWidth = function (newLineWidth) {
+		lineWidth = newLineWidth;
+		context.lineWidth = lineWidth;
+	};	
+	
+	this.setMaxLineWidth = function (newMaxLineWidth) {
+		maxCheck(newMaxLineWidth, lineWidth);
+		maxLineWidth = newMaxLineWidth;
+	};
 	
 	canvasWidth = canvas.width;
 	canvasHeight = canvas.height;
@@ -188,129 +345,14 @@ function GameGrid(newCanvas) {
 	gridColumns = Math.floor((canvasWidth - lineWidth) / (cellWidth + lineWidth));
 	gridRows = Math.floor((canvasHeight - lineWidth) / (cellWidth + lineWidth));
 
-	repaint();
+	repaint();	
 	
 	//event.on("cellSizeChanged", changeLineWidth);
 }
 /*
-
-//pattern: http://www.yuiblog.com/blog/2007/06/12/module-pattern/
-MapGrid = function() {
-
-
-	return {	
-		
-		getMinCanvasWidth: function() {
-			return minCanvasWidth;
-		},
-
-		getCanvasWidth: function() {
-			return canvas.width;
-		},
-		
-		getMaxCanvasWidth: function() {
-			return maxCanvasWidth;
-		},
-		
-		getMinCanvasHeight: function() {
-			return minCanvasHeight;
-		},
-		
-		getCanvasHeight: function() {
-			return canvas.height;
-		},
-		
-		getMaxCanvasHeight: function() {
-			return maxCanvasHeight;
-		},
-		
-		getMinGridColumns: function() {
-			return minGridColumns;
-		},
-
-		getGridColumns: function() {
-			return gridColumns;
-		},
-		
-		getMaxGridColumns: function() {
-			return maxGridColumns;
-		},
-		
-		getMinGridRows: function() {
-			return minGridRows;
-		},
-		
-		getGridRows: function() {
-			return gridRows;
-		},
-		
-		getMaxGridRows: function() {
-			return maxGridRows;
-		},
-		
-		getMinCellWidth: function() {
-			return minCellWidth;
-		},
-		
-		getCellWidth: function() {
-			return cellWidth;
-		},
-		
-		getMaxCellWidth: function() {
-			return maxCellWidth;
-		},
-		
-		getMinLineWidth: function() {
-			return minLineWidth;
-		},
-		
-		getLineWidth: function() {
-			return lineWidth;
-		},
-		
-		getMaxLineWidth: function() {
-			return maxLineWidth;
-		},
 				
 				
-		setCanvasWidth : function(newCanvasWidth) {
-			canvas.width = newCanvasWidth;
-			canvasWidth = newCanvasWidth;
-		},
-		
-		setCanvasHeight : function(newCanvasHeight) {
-			canvas.height = newCanvasHeight;
-			canvasHeight = newCanvasHeight;
-		},
-			
-		setGridRows : function(newGridRows) {
-			gridRows = newGridRows;
-		},
-		
-		setGridColumns : function(newGridColumns) {
-			gridColumns = newGridColumns;
-		},
-		
-		setMinCellWidth: function(newMinCellWidth) {
-			minCheck(newMinCellWidth, cellWidth);
-			minCellWidth = newMinCellWidth;
-		},
-		
-		setCellWidth: function(newCellWidth) {
-			cellWidth = newCellWidth;
-			
-			event.emit("cellSizeChanged", newCellWidth);
-		},
-			
-		setMaxCellWidth: function(newMaxCellWidth) {
-			maxCheck(newMaxCellWidth, cellWidth);
-			maxCellWidth = newMaxCellWidth;
-		}, 
-		
-		setLineWidth: function(newLineWidth) {
-			lineWidth = newLineWidth;
-			context.lineWidth = lineWidth;
-		},		
+	
 		
 		changeCanvasWidth : function(newCanvasWitdh, option) {
 			minMaxCheck(minCanvasWidth, maxCanvasWidth, newCanvasWidth);
