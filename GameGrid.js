@@ -4,6 +4,9 @@
  * max min checks
  * point on canvas -> current cell, [line, outside grid] (click, drag, mouse over)
  * weights (^1/2) for changeCanvasSize
+ * 
+ * distanceToGridFromBorder(min, max)
+ * alignment of grid in canvas (center, left, right)
  */
 
 function GameGrid(newCanvas) {
@@ -11,6 +14,8 @@ function GameGrid(newCanvas) {
 	if (!(newCanvas instanceof HTMLCanvasElement)) {
 		throw "Not an HTML Canvas";
 	}
+		
+	var that = this;
 	
 	var canvas = newCanvas;
 	var context = canvas.getContext('2d');
@@ -45,15 +50,28 @@ function GameGrid(newCanvas) {
 	var gridCellClicked;
 	var cellWidthChanged;
 	
-	var that = this;
+	var gridImages = [];
+
+	var	drawGridImage = function (xCoord, yCoord, imageURL) {
+		var img = new Image();
+		var dx = that.getXShift() + lineWidth + xCoord * (cellWidth + lineWidth);
+		var dy = that.getYShift() + lineWidth + yCoord * (cellWidth + lineWidth);
+		var dw = cellWidth;
+
+		img.onload = function() {
+			context.drawImage(img, dx, dy, dw, dw);
+		};
+		img.src = imageURL;
+	};
 
 	var repaint = function() {
 		alert(canvasWidth + " " + canvasHeight + " " + gridColumns + " " + gridRows);
 		alert(cellWidth + " " + lineWidth + " " + that.getGridWidth() + " " + that.getGridHeight());
 		alert(that.getXShift() + " " + that.getYShift());
-		context.fillStyle = "#c00";
-		context.fillRect(0, 0, canvasWidth, canvasHeight);
-		//context.clearRect(0, 0, canvasWidth, canvasHeight);
+			
+		//draw background image or color
+		that.drawBackground(); 
+
 		context.beginPath();
 		// vertical lines:
 		// | | | |
@@ -71,6 +89,16 @@ function GameGrid(newCanvas) {
 			context.lineTo(that.getXShift() + that.getGridWidth(), that.getYShift() + (lineWidth / 2) + j * (cellWidth + lineWidth));
 		}
 		context.stroke();
+		
+		//draw images for each grid cell
+		for (j = 0; j <= gridRows; j++) {
+			for (i = 0; i <= gridColumns; i++) {
+				var imageURL = that.getGridImage(i, j);
+				if (imageURL !== null) {
+					drawGridImage(i, j, imageURL);
+				}
+			}
+		}
 	};
 	
 	var minMaxCheck = function (min, max, value) {
@@ -154,7 +182,7 @@ function GameGrid(newCanvas) {
 			newCellWidth = maxCellWidth;
 		}
 		
-		setLineWidth(newLineWidth);		
+		that.setLineWidth(newLineWidth);		
 	};
 	
 	this.getGridWidth = function() {
@@ -303,17 +331,17 @@ function GameGrid(newCanvas) {
 		maxGridRows = newMaxGridRows;
 	};
 	
-	this.setMinCellWidth= function (newMinCellWidth) {
+	this.setMinCellWidth = function (newMinCellWidth) {
 		minCheck(newMinCellWidth, cellWidth);
 		minCellWidth = newMinCellWidth;
 	};
 	
-	this.setCellWidth= function (newCellWidth) {
+	this.setCellWidth = function (newCellWidth) {
 		cellWidth = newCellWidth;
 		//TODO event.emit("cellSizeChanged"; newCellWidth);
 	};
 		
-	this.setMaxCellWidth= function (newMaxCellWidth) {
+	this.setMaxCellWidth = function (newMaxCellWidth) {
 		maxCheck(newMaxCellWidth, cellWidth);
 		maxCellWidth = newMaxCellWidth;
 	}; 
@@ -333,6 +361,408 @@ function GameGrid(newCanvas) {
 		maxLineWidth = newMaxLineWidth;
 	};
 	
+	this.changeCanvasWidth = function (newCanvasWidth, option) {
+		minMaxCheck(minCanvasWidth, maxCanvasWidth, newCanvasWidth);
+	
+		switch(option) {
+		case "gridOnResize":
+			var newGridColumns = Math.floor((newCanvasWidth - lineWidth) / (cellWidth + lineWidth));
+			
+			if(newGridColumns < minGridColumns) {
+				newGridColumns = minGridColumns;
+				newCanvasWidth = minGridColumns * (cellWidth + lineWidth) + lineWidth;
+			} else if(newGridColumns > maxGridColumns) {
+				newGridColumns = maxGridColumns;
+			} 
+			that.setGridColumns(newGridColumns);
+			break;
+		case "cellWidthOnResize":
+			var newCellWidth = Math.floor(((newCanvasWidth - lineWidth) / gridColumns) - lineWidth);
+			if(newCellWidth < minCellWidth) {
+				newCellWidth = minCellWidth;
+				newCanvasWidth = gridColumns * (minCellWidth + lineWidth) + lineWidth;
+			} else if(newCellWidth > maxCellWidth) {
+				newCellWidth = maxCellWidth;
+			} 
+			that.setCellWidth(newCellWidth);
+			break;
+		default:
+			if (newCanvasWidth < that.getGridWidth()) {
+				newCanvasWidth = that.getGridWidth();				
+			}
+		}
+	
+		that.setCanvasWidth(newCanvasWidth);
+		repaint();
+	};
+		
+	this.changeCanvasHeight = function (newCanvasHeight, option) {
+		minMaxCheck(minCanvasHeight, maxCanvasHeight, newCanvasHeight);
+	
+		switch(option) {
+		case "gridOnResize":
+			var newGridRows = Math.floor((newCanvasHeight - lineWidth) / (cellWidth + lineWidth));
+			
+			if (newGridRows < minGridRows) {
+				newGridRows = minGridRows;
+				newCanvasHeight = minGridRows * (cellWidth + lineWidth) + lineWidth;
+			} else if (newGridRows > maxGridRows) {
+				newGridRows = maxGridRows;
+			} 
+			that.setGridRows(newGridRows);
+			break;
+		case "cellWidthOnResize":
+			var newCellWidth = Math.floor(((newCanvasHeight - lineWidth) / gridRows) - lineWidth);
+			if (newCellWidth < minCellWidth) {
+				newCellWidth = minCellWidth;
+				newCanvasHeight = gridRows * (minCellWidth + lineWidth) + lineWidth;
+			} else if(newCellWidth > maxCellWidth) {
+				newCellWidth = maxCellWidth;
+			} 
+			that.setCellWidth(newCellWidth);
+			break;
+		default:
+			if (newCanvasHeight < that.getGridHeight()) {
+				newCanvasHeight = that.getGridHeight();
+			}
+		}
+		that.setCanvasHeight(newCanvasHeight);
+		repaint();
+	};	
+		
+	this.changeCanvasSize = function (newCanvasWidth, newCanvasHeight, option) {
+		minMaxCheck(minCanvasWidth, maxCanvasWidth, newCanvasWidth);
+		minMaxCheck(minCanvasHeight, maxCanvasHeight, newCanvasHeight);
+	
+		switch(option) {
+		case "gridOnResize":
+			var newGridColumns = Math.floor((newCanvasWidth - lineWidth) / (cellWidth + lineWidth));
+			
+			if(newGridColumns < minGridColumns) {
+				newGridColumns = minGridColumns;
+				newCanvasWidth = minGridColumns * (cellWidth + lineWidth) + lineWidth;
+			} else if(newGridColumns > maxGridColumns) {
+				newGridColumns = maxGridColumns;
+			} 
+			
+			var newGridRows = Math.floor((newCanvasHeight - lineWidth) / (cellWidth + lineWidth));
+			
+			if(newGridRows < minGridRows) {
+				newGridRows = minGridRows;
+				newCanvasHeight = minGridRows * (cellWidth + lineWidth) + lineWidth;
+			} else if(newGridColumns > maxGridRows) {
+				newGridRows = maxGridRows;
+			} 
+			
+			that.setGridColumns(newGridColumns);
+			that.setGridRows(newGridRows);
+			break;
+		case "cellWidthOnResize":
+			var cellWidthForColumns = Math.floor(((newCanvasWidth - lineWidth) / gridColumns) - lineWidth);
+			if(cellWidthForColumns < minCellWidth) {
+				cellWidthForColumns = minCellWidth;
+				newCanvasWidth = gridColumns * (minCellWidth + lineWidth) + lineWidth;
+			} else if(cellWidthForColumns > maxCellWidth) {
+				cellWidthForColumns = maxCellWidth;
+			} 
+			
+			var cellWidthForRows = Math.floor(((newCanvasHeight - lineWidth) / gridRows) - lineWidth);
+			if (cellWidthForRows < minCellWidth) {
+				cellWidthForRows = minCellWidth;
+				newCanvasHeight = gridRows * (minCellWidth + lineWidth) + lineWidth;
+			} else if (cellWidthForRows > maxCellWidth) {
+				cellWidthForRows = maxCellWidth;
+			} 
+			
+			if (cellWidthForColumns < cellWidthForRows) {
+				that.setCellWidth(cellWidthForColumns);
+			} else {
+				that.setCellWidth(cellWidthForRows);
+			}
+			break;
+		default:
+			if (newCanvasWidth < that.getGridWidth()) {
+				newCanvasWidth = that.getGridWidth();				
+			}
+			if (newCanvasHeight < that.getGridHeight()) {
+				newCanvasHeight = that.getGridHeight();
+			}
+		}
+	
+		that.setCanvasWidth(newCanvasWidth);
+		that.setCanvasHeight(newCanvasHeight);
+		repaint();
+	};
+	
+	this.changeGridColumns = function (newGridColumns, option) {
+		minMaxCheck(minGridColumns, maxGridColumns, newGridColumns);
+
+		switch(option) {
+		case "canvasOnResize":
+			var newCanvasWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
+			
+			if (newCanvasWidth < minCanvasWidth) {
+				newCanvasWidth = minCanvasWidth;
+			} else if (newCanvasWidth > maxCanvasWidth) {
+				newCanvasWidth = maxCanvasWidth;
+				newGridColumns = Math.floor((maxCanvasWidth - lineWidth) / (cellWidth + lineWidth));
+			}
+			that.setCanvasWidth(newCanvasWidth);
+			break;
+		case "cellWidthOnResize":		
+			var newCellWidth = Math.floor(((canvasWidth - lineWidth) / newGridColumns) - lineWidth);
+			
+			if (newCellWidth < minCellWidth) {
+				newCellWidth = minCellWidth;
+				newGridColumns = Math.floor((canvasWidth - lineWidth) / (minCellWidth + lineWidth));
+			} else if (newCellWidth > maxCellWidth) {
+				newCellWidth = maxCellWidth;
+			}	
+			that.setCellWidth(newCellWidth);
+			break;
+		default:
+			var newGridWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
+			
+			if (newGridWidth > canvasWidth) {
+				newGridColumns = Math.floor((canvasWidth - lineWidth) / (cellWidth + lineWidth));
+			}
+		}
+		
+		that.setGridColumns(newGridColumns);
+		repaint();
+	};	
+	
+	this.changeGridRows = function (newGridRows, option) {
+		minMaxCheck(minGridRows, newGridRows, newGridRows);
+
+		switch(option) {
+		case "canvasOnResize":
+			var newCanvasHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
+			
+			if (newCanvasHeight < minCanvasHeight) {
+				newCanvasHeight = minCanvasHeight;
+			} else if (newCanvasHeight > maxCanvasHeight) {
+				newCanvasHeight = maxCanvasHeight;
+				newGridRows = Math.floor((maxCanvasHeight - lineWidth) / (cellWidth + lineWidth));
+			}
+				
+			that.setCanvasHeight(newCanvasHeight);
+			break;
+		case "cellWidthOnResize":		
+			var newCellWidth = Math.floor(((canvasHeight - lineWidth) / newGridRows) - lineWidth);
+			
+			if (newCellWidth < minCellWidth) {
+				newCellWidth = minCellWidth;
+				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellWidth + lineWidth));
+			} else if (newCellWidth > maxCellWidth) {
+				newCellWidth = maxCellWidth;
+			}	
+			that.setCellWidth(newCellWidth);
+			break;
+		default:
+			var newGridHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
+
+			if (newGridHeight > canvasHeight) {
+				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellWidth + lineWidth));
+			}
+		}
+		
+		that.setGridRows(newGridRows);
+		repaint();
+	};
+	
+	this.changeGrid = function (newGridColumns, newGridRows, option) {
+		minMaxCheck(minGridColumns, maxGridColumns, newGridColumns);
+		minMaxCheck(minGridRows, maxGridRows, newGridRows);
+
+		switch(option) {
+		case "canvasOnResize":
+			var newCanvasWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
+			
+			if (newCanvasWidth < minCanvasWidth) {
+				newCanvasWidth = minCanvasWidth;
+			} else if (newCanvasWidth > maxCanvasWidth) {
+				newCanvasWidth = maxCanvasWidth;
+				newGridColumns = Math.floor((maxCanvasWidth - lineWidth) / (cellWidth + lineWidth));
+			}
+			
+			var newCanvasHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
+			
+			if (newCanvasHeight < minCanvasHeight) {
+				newCanvasHeight = minCanvasHeight;
+			} else if (newCanvasHeight > maxCanvasHeight) {
+				newCanvasHeight = maxCanvasHeight;
+				newGridColumns = Math.floor((maxCanvasHeight - lineWidth) / (cellWidth + lineWidth));
+			}
+				
+			that.setCanvasWidth(newCanvasWidth);
+			that.setCanvasHeight(newCanvasHeight);
+			break;
+		case "cellWidthOnResize":
+			var cellWidthForColumns = Math.floor(((canvasWidth - lineWidth) / newGridColumns) - lineWidth);
+			
+			if (cellWidthForColumns < minCellWidth) {
+				cellWidthForColumns = minCellWidth;
+				newGridColumns = Math.floor((canvasWidth - lineWidth) / (minCellWidth + lineWidth));
+			} else if (cellWidthForColumns > maxCellWidth) {
+				cellWidthForColumns = maxCellWidth;
+			}
+			var cellWidthForRows = Math.floor(((canvasHeight - lineWidth) / newGridRows) - lineWidth);
+			
+			if (cellWidthForRows < minCellWidth) {
+				cellWidthForRows = minCellWidth;
+				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellWidth + lineWidth));
+			} else if (cellWidthForRows > maxCellWidth) {
+				cellWidthForRows = maxCellWidth;
+			}
+			
+			if (cellWidthForColumns < cellWidthForRows) {
+				that.setCellWidth(cellWidthForColumns);
+			} else {
+				that.setCellWidth(cellWidthForRows);
+			}
+			break;
+		default:
+			var newGridWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
+			
+			if (newGridWidth > canvasWidth) {
+				newGridColumns = Math.floor((canvasWidth - lineWidth) / (cellWidth + lineWidth));
+			}	
+			var newGridHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
+
+			if (newGridHeight > canvasHeight) {
+				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellWidth + lineWidth));
+			}
+		}
+		that.setGridColumns(newGridColumns);
+		that.setGridRows(newGridRows);
+
+		repaint();
+	};
+	
+	this.changeCellWidth = function (newCellWidth, option) {
+		minMaxCheck(minCellWidth, maxCellWidth, newCellWidth);
+		
+		var cellWidthForColumns;
+		var cellWidthForRows;
+		switch (option) {
+		case "canvasOnResize":
+			var newCanvasWidth = gridColumns * (lineWidth + newCellWidth) + lineWidth;	
+				
+			if (newCanvasWidth < minCanvasWidth) {
+				newCanvasWidth = minCanvasWidth;
+				cellWidthForColumns = newCellWidth;
+			} else if (newCanvasWidth > maxCanvasWidth) {
+				newCanvasWidth = maxCanvasWidth;
+				cellWidthForColumns = Math.floor(((maxCanvasWidth - lineWidth) / gridColumns) - lineWidth);
+			} else {
+				cellWidthForColumns = newCellWidth;
+			}
+		
+			var newCanvasHeight = gridRows * (lineWidth + newCellWidth) + lineWidth;
+			
+			if (newCanvasHeight < minCanvasHeight) {
+				newCanvasHeight = minCanvasHeight;
+				cellWidthForRows = newCellWidth;
+			} else if (newCanvasHeight > maxCanvasHeight) {
+				newCanvasHeight = maxCanvasHeight;
+				cellWidthForRows = Math.floor(((maxCanvasHeight - lineWidth) / gridRows) - lineWidth);
+			} else {				
+				cellWidthForRows = newCellWidth;
+			}
+	
+			that.setCanvasWidth(newCanvasWidth);		
+			that.setCanvasHeight(newCanvasHeight);
+			break;
+			
+		case "gridOnResize":
+			var newGridColumns = Math.floor((canvasWidth - lineWidth) / (lineWidth + newCellWidth));
+			
+			if (newGridColumns < minGridColumns) {
+				newGridColumns = minGridColumns;
+				cellWidthForColumns = Math.floor(((canvasWidth - lineWidth) / minGridColumns) - lineWidth);
+			} else if (newGridColumns > maxGridColumns) {
+				newGridColumns = maxGridColumns;
+				cellWidthForColumns = newCellWidth;
+			} else {
+				cellWidthForColumns = newCellWidth;
+			}
+			
+			var newGridRows = Math.floor((canvasHeight - lineWidth) / (lineWidth + newCellWidth));
+			
+			if (newGridRows < minGridRows) {
+				newGridRows = minGridRows;
+				cellWidthForRows = Math.floor(((canvasHeight - lineWidth) / minGridRows) - lineWidth);
+			} else if (newGridRows > maxGridRows) {
+				newGridRows = maxGridRows;
+				cellWidthForRows = newCellWidth;
+			} else {
+				cellWidthForRows = newCellWidth;
+			}
+	
+			that.setGridColumns(newGridColumns);		
+			that.setGridRows(newGridRows);
+			break;
+			
+		default:
+			var newGridWidth = gridColumns * (lineWidth + newCellWidth) + lineWidth;
+			var newGridHeight = gridRows * (lineWidth + newCellWidth) + lineWidth;
+			
+			if (newGridWidth > canvasWidth) {
+				cellWidthForColumns = Math.floor(((canvasWidth - lineWidth) / gridColumns) - lineWidth);
+			} else {
+				cellWidthForColumns = newCellWidth;
+			}
+			
+			if (newGridHeight > canvasHeight) {
+				cellWidthForRows = Math.floor(((canvasHeight - lineWidth) / gridRows) - lineWidth);
+			} else {
+				cellWidthForRows = newCellWidth;
+			}
+		}
+		
+		if (cellWidthForColumns < cellWidthForRows) {
+			newCellWidth = cellWidthForColumns;
+		} else {
+			newCellWidth = cellWidthForRows;
+		}
+		
+		that.setCellWidth(newCellWidth);
+	};
+	
+	this.addGridImage = function (xCoord, yCoord, imageURL) {
+		if (xCoord < 0 || xCoord > gridColumns || yCoord < 0 || yCoord > gridRows) {
+			throw "The image lies outside the grid.";
+		}
+		gridImages[xCoord][yCoord] = imageURL;
+	};
+	
+	this.getGridImage = function (xCoord, yCoord) {
+		return gridImages[xCoord][yCoord];
+	};
+	
+	this.removeGridImage = function (xCoord, yCoord) {
+		gridImages[xCoord][yCoord] = null;
+	};
+	
+	this.setBackgroundColor = function (color) {
+		that.prototype.drawBackground = function () {
+			context.fillStyle = color;
+			context.fillRect(0, 0, canvasWidth, canvasHeight);
+		};
+	};
+	
+	this.setBackgroundImage = function (imageURL) {
+		that.prototype.drawBackground = function () {
+			var img = Image()
+			img.onload = function() {
+				context.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+			};
+			img.src = imageURL;
+		};
+	};
+
+	
 	canvasWidth = canvas.width;
 	canvasHeight = canvas.height;
 	
@@ -350,385 +780,8 @@ function GameGrid(newCanvas) {
 	//event.on("cellSizeChanged", changeLineWidth);
 }
 /*
-				
-				
-	
 		
-		changeCanvasWidth : function(newCanvasWitdh, option) {
-			minMaxCheck(minCanvasWidth, maxCanvasWidth, newCanvasWidth);
 		
-			switch(option) {
-			case "gridOnResize":
-				var newGridColumns = Math.floor((newCanvasWidth - lineWidth) / (cellWidth + lineWidth));
-				
-				if(newGridColumns < minGridColumns) {
-					newGridColumns = minGridColumns;
-					newCanvasWidth = minGridColumns * (cellWidth + lineWidth) + lineWidth;
-				} else if(newGridColumns > maxGridColumns) {
-					newGridColumns = maxGridColumns;
-				} 
-				MapGrid.setGridColumns(newGridColumns);
-				break;
-			case "cellWidthOnResize":
-				var newCellWidth = Math.floor(((newCanvasWidth - lineWidth) / gridColumns) - lineWidth);
-				if(newCellWidth < minCellWidth) {
-					newCellWidth = minCellWidth;
-					newCanvasWidth = gridColumns * (minCellWidth + lineWidth) + lineWidth
-				} else if(newCellWidth > maxCellWidth) {
-					newCellWidth = maxCellWidth;
-				} 
-				MapGrid.setCellWidth(newCellWidth);
-				break;
-			default:
-				if(newCanvasWidth < getGridWidth())
-					newCanvasWidth = getGridWidth();
-			}
-		
-			MapGrid.setCanvasWidth(newCanvasWidth);
-			repaint();
-		},
-		
-		changeCanvasHeight : function(newCanvasHeight, option) {
-			minMaxCheck(minCanvasHeight, maxCanvasHeight, newCanvasHeight);
-		
-			switch(option) {
-			case "gridOnResize":
-				var newGridRows = Math.floor((newCanvasHeight - lineWidth) / (cellWidth + lineWidth));
-				
-				if(newGridRows < minGridRows) {
-					newGridRows = minGridRows;
-					newCanvasHeight = minGridRows * (cellWidth + lineWidth) + lineWidth;
-				} else if(newGridColumns > maxGridRows) {
-					newGridRows = maxGridRows;
-				} 
-				MapGrid.setGridRows(newGridRows);
-				break;
-			case "cellWidthOnResize":
-				var newCellWidth = Math.floor(((newCanvasHeight - lineWidth) / gridRows) - lineWidth);
-				if(newCellWidth < minCellWidth) {
-					newCellWidth = minCellWidth;
-					newCanvasHeight = gridRows * (minCellWidth + lineWidth) + lineWidth
-				} else if(newCellWidth > maxCellWidth) {
-					newCellWidth = maxCellWidth;
-				} 
-				MapGrid.setCellWidth(newCellWidth);
-				break;
-			default:
-				if(newCanvasHeight < getGridHeight())
-					newCanvasHeight = getGridHeight();
-			}
-		
-			MapGrid.setCanvasHeight(newCanvasHeight);
-			repaint();
-		},	
-		
-		changeCanvasSize: function (newCanvasWidth, newCanvasHeight, option) {
-			minMaxCheck(minCanvasWidth, maxCanvasWidth, newCanvasWidth);
-			minMaxCheck(minCanvasHeight, maxCanvasHeight, newCanvasHeight);
-		
-			switch(option) {
-			case "gridOnResize":
-				var newGridColumns = Math.floor((newCanvasWidth - lineWidth) / (cellWidth + lineWidth));
-				
-				if(newGridColumns < minGridColumns) {
-					newGridColumns = minGridColumns;
-					newCanvasWidth = minGridColumns * (cellWidth + lineWidth) + lineWidth;
-				} else if(newGridColumns > maxGridColumns) {
-					newGridColumns = maxGridColumns;
-				} 
-				
-				var newGridRows = Math.floor((newCanvasHeight - lineWidth) / (cellWidth + lineWidth));
-				
-				if(newGridRows < minGridRows) {
-					newGridRows = minGridRows;
-					newCanvasHeight = minGridRows * (cellWidth + lineWidth) + lineWidth;
-				} else if(newGridColumns > maxGridRows) {
-					newGridRows = maxGridRows;
-				} 
-				
-				MapGrid.setGridColumns(newGridColumns);
-				MapGrid.setGridRows(newGridRows);
-				break;
-			case "cellWidthOnResize":
-				var cellWidthForColumns = Math.floor(((newCanvasWidth - lineWidth) / gridColumns) - lineWidth);
-				if(cellWidthForColumns < minCellWidth) {
-					cellWidthForColumns = minCellWidth;
-					newCanvasWidth = gridColumns * (minCellWidth + lineWidth) + lineWidth
-				} else if(cellWidthForColumns > maxCellWidth) {
-					cellWidthForColumns = maxCellWidth;
-				} 
-				
-				var cellWidthForRows = Math.floor(((newCanvasHeight - lineWidth) / gridRows) - lineWidth);
-				if(cellWidthForRows < minCellWidth) {
-					cellWidthForRows = minCellWidth;
-					newCanvasHeight = gridRows * (minCellWidth + lineWidth) + lineWidth
-				} else if(newCellWidth > maxCellWidth) {
-					cellWidthForRows = maxCellWidth;
-				} 
-				
-				if (cellWidthForColumns < cellWidthForRows)
-					MapGrid.setCellWidth(cellWidthForColumns);
-				else
-					MapGrid.setCellWidth(cellWidthForRows);
-				break;
-			default:
-				if(newCanvasWidth < getGridWidth())
-					newCanvasWidth = getGridWidth();
-					
-				if(newCanvasHeight < getGridHeight())
-					newCanvasHeight = getGridHeight();
-			}
-		
-			MapGrid.setCanvasWidth(newCanvasWidth);
-			MapGrid.setCanvasHeight(newCanvasHeight);
-			repaint();
-		},
-			
-		changeGridColumns : function(newGridColumns, option) {
-			minMaxCheck(minGridColumns, maxGridColumns, newGridColumns);
-	
-			switch(option) {
-			case "canvasOnResize":
-				var newCanvasWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
-				
-				if (newCanvasWidth < minCanvasWidth)
-					newCanvasWidth = minCanvasWidth;
-				else if (newCanvasWidth > maxCanvasWidth) 
-					newCanvasWidth = maxCanvasWidth;
-					newGridColumns = Math.floor((maxCanvasWidth - lineWidth) / (cellWidth + lineWidth));
-			
-				MapGrid.setCanvasWidth(newCanvasWidth);
-				break;
-			case "cellWidthOnResize":		
-				var newCellWidth = Math.floor(((canvasWidth - lineWidth) / newGridColumns) - lineWidth);
-				
-				if (newCellWidth < minCellWidth) {
-					newCellWidth = minCellWidth;
-					newGridColumns = Math.floor((canvasWidth - lineWidth) / (minCellWidth + lineWidth));
-				} else if (newCellWidth > maxCellWidth) 
-					newCellWidth = maxCellWidth;
-					
-				MapGrid.setCellWidth(newCellWidth);
-				break;
-			default:
-				var newGridWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
-				
-				if (newGridWidth > canvasWidth)
-					newGridColumns = Math.floor((canvasWidth - lineWidth) / (cellWidth + lineWidth));
-			}
-			
-			MapGrid.setGridColumns(newGridColumns);
-			repaint();
-		},	
-		
-		changeGridRows : function(newGridRows, option) {
-			minMaxCheck(minGridColumns, maxGridColumns, newGridColumns);
-	
-			switch(option) {
-			case "canvasOnResize":
-				var newCanvasHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
-				
-				if (newCanvasHeight < minCanvasHeight)
-					newCanvasHeight = minCanvasHeight;
-				else if (newCanvasHeight > maxCanvasHeight) {
-					newCanvasHeight = maxCanvasHeight;
-					newGridRows = Math.floor((maxCanvasHeight - lineWidth) / (cellWidth + lineWidth));
-				}
-					
-				MapGrid.setCanvasHeight(newCanvasHeight);
-				break;
-			case "cellWidthOnResize":		
-				var newCellWidth = Math.floor(((canvasHeight - lineWidth) / newGridRows) - lineWidth);
-				
-				if (newCellWidth < minCellWidth) {
-					newCellWidth = minCellWidth;
-					newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellWidth + lineWidth));
-				} else if (newCellWidth > maxCellWidth) 
-					newCellWidth = maxCellWidth;
-					
-				MapGrid.setCellWidth(newCellWidth);
-				break;
-			default:
-				var newGridHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
-	
-				if (newGridHeight > canvasHeight)
-					newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellWidth + lineWidth));
-			}
-			
-			MapGrid.setGridRows(newGridRows);
-			repaint();
-		},
-		
-		changeGrid : function(newGridColumns, newGridRows, option) {
-			minMaxCheck(minGridColumns, maxGridColumns, newGridColumns);
-			minMaxCheck(minGridRows, maxGridRows, newGridRows);
-	
-			switch(option) {
-			case "canvasOnResize":
-				var newCanvasWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
-				
-				if (newCanvasWidth < minCanvasWidth)
-					newCanvasWidth = minCanvasWidth;
-				else if (newCanvasWidth > maxCanvasWidth) {
-					newCanvasWidth = maxCanvasWidth;
-					newGridColumns = Math.floor((maxCanvasWidth - lineWidth) / (cellWidth + lineWidth));
-				}
-				
-				var newCanvasHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
-				
-				if (newCanvasHeight < minCanvasHeight)
-					newCanvasHeight = minCanvasHeight;
-				else if (newCanvasHeight > maxCanvasHeight) {
-					newCanvasHeight = maxCanvasHeight;
-					newGridColumns = Math.floor((maxCanvasHeight - lineWidth) / (cellWidth + lineWidth));
-				}
-					
-				MapGrid.setCanvasWidth(newCanvasWidth);
-				MapGrid.setCanvasHeight(newCanvasHeight);
-				break;
-			case "cellWidthOnResize":
-				var cellWidthForColumns = Math.floor(((canvasWidth - lineWidth) / newGridColumns) - lineWidth);
-				
-				if (cellWidthForColumns < minCellWidth) {
-					cellWidthForColumns = minCellWidth;
-					newGridColumns = Math.floor((canvasWidth - lineWidth) / (minCellWidth + lineWidth));
-				} else if (cellWidthForColumns > maxCellWidth) 
-					cellWidthForColumns = maxCellWidth;
-				
-				var cellWidthForRows = Math.floor(((canvasHeight - lineWidth) / newGridRows) - lineWidth);
-				
-				if (cellWidthForRows < minCellWidth) {
-					cellWidthForRows = minCellWidth;
-					newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellWidth + lineWidth));
-				} else if (cellWidthForRows > maxCellWidth) 
-					cellWidthForRows = maxCellWidth;
-				
-				if(cellWidthForColumns < cellWidthForRows) 
-					MapGrid.setCellWidth(cellWidthForColumns);
-				else 
-					MapGrid.setCellWidth(cellWidthForRows);
-				break;
-			default:
-				var newGridWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
-				
-				if (newGridWidth > canvasWidth)
-					newGridColumns = Math.floor((canvasWidth - lineWidth) / (cellWidth + lineWidth));
-					
-				var newGridHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
-	
-				if (newGridHeight > canvasHeight)
-					newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellWidth + lineWidth));
-			}
-			MapGrid.setGridColumns(newGridColumns);
-			MapGrid.setGridRows(newGridRows);
-	
-			repaint();
-		},
-		
-		changeCellWidth: function(newCellWidth, option) {
-			minMaxCheck(minCellWidth, maxCellWidth, newCellWidth);
-			
-			var cellWidthForColumns;
-			var cellWidthForRows;
-			switch (option) {
-			case "canvasOnResize":
-				var newCanvasWidth = gridColumns * (lineWidth + newCellWidth) + lineWidth;	
-					
-				if (newCanvasWidth < minCanvasWidth) {
-					newCanvasWidth = minCanvasWidth;
-					cellWidthForColumns = newCellWidth;
-				} else if (newCanvasWidth > maxCanvasWidth) {
-					newCanvasWidth = maxCanvasWidth;
-					cellWidthForColumns = Math.floor(((maxCanvasWidth - lineWidth) / gridColumns) - lineWidth);
-				} else {
-					cellWidthForColumns = newCellWidth;
-				}
-			
-				var newCanvasHeight = gridRows * (lineWidth + newCellWidth) + lineWidth;
-				
-				if (newCanvasHeight < minCanvasHeight) {
-					newCanvasHeight = minCanvasHeight;
-					cellWidthForRows = newCellWidth;
-				} else if (newGridHeight > maxCanvasHeight) {
-					newCanvasHeight = maxCanvasHeight;
-					cellWidthForRows = Math.floor(((maxCanvasHeight - lineWidth) / gridRows) - lineWidth);
-				} else {				
-					cellWidthForRows = newCellWidth;
-				}
-		
-				MapGrid.setCanvasWidth(newCanvasWidth);		
-				MapGrid.setCanvasHeight(newCanvasHeight);
-				break;
-				
-			case "gridOnResize":
-				var newGridColumns = Math.floor((canvasWidth - lineWidth) / (lineWidth + newCellWidth));
-				
-				if (newGridColumns < minGridColumns) {
-					newGridColumns = minGridColumns;
-					cellWidthForColumns = Math.floor(((canvasWidth - lineWidth) / minGridColumns) - lineWidth);
-				} else if (newGridColumns > maxGridColumns) {
-					newGridColumns = maxGridColumns;
-					cellWidthForColumns = newCellWidth;
-				} else {
-					cellWidthForColumns = newCellWidth;
-				}
-				
-				var newGridRows = Math.floor((canvasHeight - lineWidth) / (lineWidth + newCellWidth));
-				
-				if (newGridRows < minGridRows) {
-					newGridRows = minGridRows;
-					cellWidthForRows = Math.floor(((canvasHeight - lineWidth) / minGridRows) - lineWidth);
-				} else if (newGridRows > maxGridRows) {
-					newGridRows = maxGridRows;
-					cellWidthForRows = newCellWidth;
-				} else {
-					cellWidthForRows = newCellWidth;
-				}
-		
-				MapGrid.setGridColumns(newGridColumns);		
-				MapGrid.setGridRows(newGridRows);
-				break;
-				
-			default:
-				var newGridWidth = gridColumns * (lineWidth + newCellWidth) + lineWidth;
-				var newGridHeight = gridRows * (lineWidth + newCellWidth) + lineWidth;
-				
-				if (newGridWidth > canvasWidth)
-					cellWidthForColumns = Math.floor(((canvasWidth - lineWidth) / gridColumns) - lineWidth);
-				else 
-					cellWidthForColumns = newCellWidth;
-				
-				if (newGridHeight > canvasHeight)
-					cellWidthForRows = Math.floor(((canvasHeight - lineWidth) / gridRows) - lineWidth);
-				else 
-					cellWidthForRows = newCellWidth;
-			}
-			
-			if (cellWidthForColumns < cellWidthForRows)
-				newCellWidth = cellWidthForColumns;
-			else 
-				newCellWidth = cellWidthForRows;
-			
-			MapGrid.setCellWidth(newCellWidth);
-		},
-		
-		setCanvas : function(ncanvas) {
-
-		},
-		
-		drawMapObject : function(xCoord, yCoord, imageURL) {
-			var img = new Image();
-			dx = this.getXShift() + lineWidth + xCoord * (cellWidth + lineWidth);
-			dy = this.getYShift() + lineWidth + yCoord * (cellWidth + lineWidth);
-			dw = cellWidth;
-	
-			img.onload = function() {
-				context.drawImage(img, dx, dy, dw, dw);
-			};
-			img.src = imageURL;
-		},
-		
-		/**
 		 * Forwards the clicked cell coordinates on the map grid.
 		 * When the clicked point lies outside the grid or on a grid line,
 		 * -1 -1 will be returned.
@@ -756,8 +809,5 @@ function GameGrid(newCanvas) {
 	context.fillStyle = "#d00";
 	context.fillRect(0, 0, 100, 200);
 */
-
-
-
 
 	//http://adomas.org/javascript-mouse-wheel/
