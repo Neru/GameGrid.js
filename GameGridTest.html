@@ -11,23 +11,33 @@ html, body {
 }
 </style>
 <script type="text/javascript" src="GameGrid.js"></script>
+<script type="text/javascript" src="EventEmitter.js"></script>
+<script type="text/javascript" src="gl-matrix.js"></script>
 <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
 <script type="text/javascript">
 
 	//spinner http://www.switchonthecode.com/tutorials/javascript-controls-the-spin-control
 
 	function init() {
+		
+		/*
 		var canvas = document.getElementById("canvas");
 		//canvas.onkeypress = keyPressed;
 		canvas.height = 1000;
-		canvas.width = 100;
+		canvas.width = -100;
 		var gameGrid = new GameGrid(canvas);
+		
+		gameGrid.changeCanvasHeight(300, "gridOnResize");
+		gameGrid.setCellWidth(10);
 		//MapGrid.drawMapObject(0, 1, "http://127.0.0.1:8020/RPG-API%20Client/WebContent/Door.png");
 		
 		// MapGrid.addClickedGridCellListener(function(point) {
 			// MapGrid.changeCellWidth(25, "gridOnResize");
 		// });
+		*/
 	}
+	
+	init.prototype = new EventEmitter;
 	
 	function windowResized() {
 		var newWidth = $(window).width();

@@ -1,14 +1,22 @@
 /**
  * TODO:
- * events: event emitter api
- * max min checks
- * point on canvas -> current cell, [line, outside grid] (click, drag, mouse over)
+ * check changeCanvasHeight cellSizeOnResize
  * weights (^1/2) for changeCanvasSize
+ * image and geo coordinate system
+ * coordinate change listener (mouse over or http://www.html5canvastutorials.com/advanced/html5-canvas-path-mouseover/)
+ * mark cell
  * 
+ * Enhancements:
+ * improve getGridCoordinate [which line clicked, where outside grid]
+ * drag images from one cell to the other?
  * distanceToGridFromBorder(min, max)
- * alignment of grid in canvas (center, left, right)
+ * adjustable alignment of grid in canvas (center, left, right)
+ * image (stretched, fitted, side-by-side), like desktop background in Windows
  */
 
+/**
+ * (c) by Neru, 2011
+ */
 function GameGrid(newCanvas) {
 	
 	if (!(newCanvas instanceof HTMLCanvasElement)) {
@@ -26,9 +34,6 @@ function GameGrid(newCanvas) {
 	var gridRows = 9; //y
 	var cellWidth = 50;
 	var lineWidth = context.lineWidth = 1;
-	
-	var widthFactor = Math.sqrt(canvasWidth / canvas.width);
-	var heightFactor = Math.sqrt(canvasHeight / canvas.height);
 	
 	var lineWidthFunction = function (cellWidth) {
 		return 1;
@@ -51,6 +56,13 @@ function GameGrid(newCanvas) {
 	var cellWidthChanged;
 	
 	var gridImages = [];
+	var matrix = mat4.create();
+	mat4.identity(matrix);
+	
+	var backgroundImage;
+	var backgroundColor;
+	
+	var ee = new EventEmitter();
 
 	var	drawGridImage = function (xCoord, yCoord, imageURL) {
 		var img = new Image();
@@ -63,14 +75,28 @@ function GameGrid(newCanvas) {
 		};
 		img.src = imageURL;
 	};
+	
+	var drawBackground = function() {
+	};
+	
+	var drawBackgroundColor = function () {
+		context.fillStyle = backgroundColor;
+		context.fillRect(0, 0, canvasWidth, canvasHeight);
+	};
+	
+	var drawBackgroundImage = function () {
+		var img = Image();
+		img.onload = function() {
+			context.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+		};
+		img.src = backgroundImage;
+	};
 
 	var repaint = function() {
-		alert(canvasWidth + " " + canvasHeight + " " + gridColumns + " " + gridRows);
-		alert(cellWidth + " " + lineWidth + " " + that.getGridWidth() + " " + that.getGridHeight());
-		alert(that.getXShift() + " " + that.getYShift());
+		alert(that.toString());
 			
-		//draw background image or color
-		that.drawBackground(); 
+		//draw either background image or color
+		drawBackground(); 
 
 		context.beginPath();
 		// vertical lines:
@@ -91,6 +117,7 @@ function GameGrid(newCanvas) {
 		context.stroke();
 		
 		//draw images for each grid cell
+		/*
 		for (j = 0; j <= gridRows; j++) {
 			for (i = 0; i <= gridColumns; i++) {
 				var imageURL = that.getGridImage(i, j);
@@ -99,12 +126,29 @@ function GameGrid(newCanvas) {
 				}
 			}
 		}
+		*/
 	};
 	
-	var minMaxCheck = function (min, max, value) {
-		if (value < min) {
+	var minCheck = function (newMin, value, minMin) {
+		if (newMin > value) {
+			throw "New Minimum too large.";
+		} else if (newMin < minMin) {
+			throw "New Minimum smaller than the smallest minimum.";
+		}
+	};
+	
+	var maxCheck = function (newMax, value, maxMax) {
+		if (newMax < value) {
+			throw "New Maximum too small.";
+		} else if (newMax > maxMax) {
+			throw "New Maximum bigger than the biggest Maximum.";
+		}
+	};
+	
+	var minMaxCheck = function (min, max, newValue) {
+		if (newValue < min) {
 			throw "New Value too small.";
-		} else if (value > max) {
+		} else if (newValue > max) {
 			throw "New Value too large.";			
 		}
 	};
@@ -126,10 +170,14 @@ function GameGrid(newCanvas) {
 
 		return {x: x, y: y};
 	};
-	
-	var getClickedGridCell = function(clickedPoint) {
-		var x = clickedPoint.x - that.getXShift();
-		var y = clickedPoint.y - that.getYShift();
+
+	/**
+	 * When the point lies outside the grid or on a grid line,
+	 * -1 -1 will be returned.
+	 */
+	var getGridCoordinate = function (pointOnCanvas) {
+		var x = pointOnCanvas.x - that.getXShift();
+		var y = pointOnCanvas.y - that.getYShift();
 
 		var d = lineWidth + cellWidth;
 
@@ -161,17 +209,14 @@ function GameGrid(newCanvas) {
 		return {x: i, y: j};
 	};
 	
-	var canvasClicked = function (e) {
-		var point = getClickedPointOnCanvas(e);
-		point = getClickedGridCell(point);
-		//trigger callback
-		gridCellClicked(point);
+	var getGameCoordinate = function (gridCoordinate) {
+		//TODO
+		return gridCoordinate;
 	};
 	
 	var changeLineWidth = function (newCellWidth) {
 		var newLineWidth = lineWidthFunction(newCellWidth);
 		
-		positiveIntegerCheck(newLineWidth);
 		minMaxCheck(minLineWidth, maxLineWidth, newLineWidth);
 		
 		newCellWidth = cellWidth - (newLineWidth - lineWidth);
@@ -338,7 +383,7 @@ function GameGrid(newCanvas) {
 	
 	this.setCellWidth = function (newCellWidth) {
 		cellWidth = newCellWidth;
-		//TODO event.emit("cellSizeChanged"; newCellWidth);
+		ee.emit("cellSizeChanged", newCellWidth);
 	};
 		
 	this.setMaxCellWidth = function (newMaxCellWidth) {
@@ -737,7 +782,7 @@ function GameGrid(newCanvas) {
 		gridImages[xCoord][yCoord] = imageURL;
 	};
 	
-	this.getGridImage = function (xCoord, yCoord) {
+	this.getImageOnGrid = function (xCoord, yCoord) {
 		return gridImages[xCoord][yCoord];
 	};
 	
@@ -746,22 +791,88 @@ function GameGrid(newCanvas) {
 	};
 	
 	this.setBackgroundColor = function (color) {
-		that.prototype.drawBackground = function () {
-			context.fillStyle = color;
-			context.fillRect(0, 0, canvasWidth, canvasHeight);
-		};
+		backgroundColor = color;
+		drawBackground = drawBackgroundColor;
 	};
 	
 	this.setBackgroundImage = function (imageURL) {
-		that.prototype.drawBackground = function () {
-			var img = Image()
-			img.onload = function() {
-				context.drawImage(img, 0, 0, canvasWidth, canvasHeight);
-			};
-			img.src = imageURL;
-		};
+		backgroundImage = imageURL;
+		drawBackground = drawBackgroundImage;
+	};
+	
+	this.translateGrid = function (x, y) {
+		var vector = vec3.create([x, y, 0]);
+		mat4.translate(matrix, vector);
+	};
+	
+	this.centerGridAt = function (X, Y) {
+		var dx = X - centerX;
+		var dy = Y - centerY;
+		
+		var vector = vec3.create([dy, dy, 0]);
+		mat4.translate(matrix, vector);
+	};
+	
+	this.rotateGrid90DegreesClockWise = function () {
+		//TODO swap changeGridColumns and Rows and canvasWidth and Height
+		//canvasOnResize, gridOnResize, cellWidthOnResize
+		var vector = vec3.create([-centerX, -centerY, 0]);
+		mat4.translate(matrix, vector);
+		mat4.rotateZ(matrix, Math.PI/2);
+		vec3.negate(vector);
+		mat4.translate(matrix, vector);
+		repaint();
+	};
+	
+	this.rotateGrid90DegreesAntiClockWise = function () {
+		//TODO swap changeGridColumns and Rows and canvasWidth and Height
+		//canvasOnResize, gridOnResize, cellWidthOnResize
+		var vector = vec3.create([-centerX, -centerY, 0]);
+		mat4.translate(matrix, vector);
+		mat4.rotateZ(matrix, -Math.PI/2);
+		vec3.negate(vector);
+		mat4.translate(matrix, vector);
+		repaint();
+	};
+	
+	this.rotateGrid180Degrees = function () {
+		var vector = vec3.create([-centerX, -centerY, 0]);
+		mat4.translate(matrix, vector);
+		mat4.rotateZ(matrix, Math.PI/2);
+		vec3.negate(vector);
+		mat4.translate(matrix, vector);
+		repaint();
+	};
+	
+	this.toString = function() {
+		var s = "";
+		s += "Canvas width: " + canvasWidth + "\n"; //(" + minCanvasWidth + " - " + maxCanvasWidth + ")
+		s += "Canvas height: " + canvasHeight + "\n"; //(" + minCanvasHeight + " - " + maxCanvasHeight + ")
+		s += "Grid columns: " + gridColumns + "\n"; //(" + minGridColumns + " - " + maxGridColumns + ")
+		s += "Grid rows: " + gridRows + "\n"; //(" + minGridRows + " - " + maxGridRows + ")
+		s += "Cell width: " + cellWidth + "\n"; //(" + minCellWidth + " - " + maxCellWidth + ")
+		s += "Line width: " + lineWidth + "\n"; //(" + minLineWidth + " - " + maxLineWidth + ")
+		s += "X-Shift: " + that.getXShift() + "\n";
+		s += "Y-Shift: " + that.getYShift() + "\n";
+		return s;
+	};
+	
+	this.addEventListener = function (eventName, callback) {
+		ee.addEventListener(eventName, callback);
+	};
+	
+	this.on = addEventListener;
+	
+	this.once = function (eventName, callback) {
+		ee.once(eventName, callback);
+	};
+	
+	this.removeEventListener = function (eventName, callback) {
+		ee.removeEventListener(eventName, callback);
 	};
 
+	var widthFactor = Math.sqrt(canvasWidth / canvas.width);
+	var heightFactor = Math.sqrt(canvasHeight / canvas.height);
 	
 	canvasWidth = canvas.width;
 	canvasHeight = canvas.height;
@@ -775,29 +886,23 @@ function GameGrid(newCanvas) {
 	gridColumns = Math.floor((canvasWidth - lineWidth) / (cellWidth + lineWidth));
 	gridRows = Math.floor((canvasHeight - lineWidth) / (cellWidth + lineWidth));
 
+	ee.on("cellSizeChanged", changeLineWidth);
+
 	repaint();	
 	
-	//event.on("cellSizeChanged", changeLineWidth);
-}
-/*
-		
-		
-		 * Forwards the clicked cell coordinates on the map grid.
-		 * When the clicked point lies outside the grid or on a grid line,
-		 * -1 -1 will be returned.
-		 
-		addClickedGridCellListener: function(callback) {
-			gridCellClicked = callback;			
-			canvas.addEventListener("mousedown", canvasClicked, false);
-		}, 
-		
-		removeClickedGridCellListener: function() {
-			gridCellClicked = null;			
-			canvas.removeEventListener("mousedown", canvasClicked, false);
-		}
+	function canvasClicked(e) {
+		var point = getClickedPointOnCanvas(e);
+		ee.emit("canvasClicked", point);
+		var gridCoordinate = getGridCoordinate(point);
+		ee.emit("gridCoordinateClicked", gridCoordinate);
+		var gameCoordinate = getGameCoordinate(gridCoordinate);
+		ee.emit("gameCoordinateClicked", gameCoordinate);
+		var url = that.getImageOnGrid(gridCoordinate.x, gridCoordinate.y);
+		ee.emit("imageClicked", url);
 	}
-}();
-*/
+		
+	canvas.addEventListener("mousedown", canvasClicked);
+}
 
 /*
 	var canvas2 = $('<canvas/>').attr({
