@@ -12,6 +12,7 @@
  * distanceToGridFromBorder(min, max)
  * adjustable alignment of grid in canvas (center, left, right)
  * image (stretched, fitted, side-by-side), like desktop background in Windows
+ * SpatialLite Database
  */
 
 /**
@@ -60,11 +61,12 @@ function GameGrid(newCanvas) {
 	mat4.identity(matrix);
 	
 	var backgroundImage;
-	var backgroundColor;
+	var backgroundColor = "#EEEEEE";
+	var gridLineColor = "#000000"
 	
 	var ee = new EventEmitter();
 
-	var	drawGridImage = function (xCoord, yCoord, imageURL) {
+	var drawGridImage = function (xCoord, yCoord, imageURL) {
 		var img = new Image();
 		var dx = that.getXShift() + lineWidth + xCoord * (cellWidth + lineWidth);
 		var dy = that.getYShift() + lineWidth + yCoord * (cellWidth + lineWidth);
@@ -74,9 +76,6 @@ function GameGrid(newCanvas) {
 			context.drawImage(img, dx, dy, dw, dw);
 		};
 		img.src = imageURL;
-	};
-	
-	var drawBackground = function() {
 	};
 	
 	var drawBackgroundColor = function () {
@@ -91,13 +90,16 @@ function GameGrid(newCanvas) {
 		};
 		img.src = backgroundImage;
 	};
+		
+	var drawBackground = drawBackgroundColor;
 
 	var repaint = function() {
 		alert(that.toString());
 			
 		//draw either background image or color
 		drawBackground(); 
-
+		
+		context.fillStyle = gridLineColor;
 		context.beginPath();
 		// vertical lines:
 		// | | | |
@@ -120,6 +122,7 @@ function GameGrid(newCanvas) {
 		/*
 		for (j = 0; j <= gridRows; j++) {
 			for (i = 0; i <= gridColumns; i++) {
+				//matrix multiplication
 				var imageURL = that.getGridImage(i, j);
 				if (imageURL !== null) {
 					drawGridImage(i, j, imageURL);
@@ -404,6 +407,14 @@ function GameGrid(newCanvas) {
 	this.setMaxLineWidth = function (newMaxLineWidth) {
 		maxCheck(newMaxLineWidth, lineWidth);
 		maxLineWidth = newMaxLineWidth;
+	};
+	
+	this.setGridLineColor = function(newGridLineColor) {
+		gridLineColor = newGridLineColor;
+	};
+	
+	this.setBackgroundColor = function(newBackgroundColor) {
+		backgroundColor = newBackgroundColor;
 	};
 	
 	this.changeCanvasWidth = function (newCanvasWidth, option) {

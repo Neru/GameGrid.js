@@ -17,27 +17,24 @@ html, body {
 <script type="text/javascript">
 
 	//spinner http://www.switchonthecode.com/tutorials/javascript-controls-the-spin-control
-
+	var gameGrid;
+	
 	function init() {
 		
-		/*
 		var canvas = document.getElementById("canvas");
 		//canvas.onkeypress = keyPressed;
 		canvas.height = 1000;
 		canvas.width = -100;
-		var gameGrid = new GameGrid(canvas);
+		gameGrid = new GameGrid(canvas);
 		
-		gameGrid.changeCanvasHeight(300, "gridOnResize");
-		gameGrid.setCellWidth(10);
+		//gameGrid.changeCanvasHeight(300, "gridOnResize");
+		//gameGrid.setCellWidth(10);
 		//MapGrid.drawMapObject(0, 1, "http://127.0.0.1:8020/RPG-API%20Client/WebContent/Door.png");
 		
 		// MapGrid.addClickedGridCellListener(function(point) {
 			// MapGrid.changeCellWidth(25, "gridOnResize");
 		// });
-		*/
 	}
-	
-	init.prototype = new EventEmitter;
 	
 	function windowResized() {
 		var newWidth = $(window).width();
@@ -62,8 +59,47 @@ html, body {
 	window.onresize = windowResized;
 
 </script>
-<body onload="init();">
+<body onLoad="init();">
+<table>
+  <tr><td>
+<table>
+  <tr>
+    <td>Minimum Grid Columns:</td>
+    <td><input id="minGridColumns" type="text" size="3"></td>
+    <td><input type="button" value="change" onclick="gameGrid.setMinGridColumns(document.getElementById('minGridColumns').value);"></td>
+  </tr>
+  <tr>
+    <td>Grid Columns:</td>
+    <td><input id="gridColumns" type="text" size="3"></td>
+    <td><input type="button" value="change" onclick="gameGrid.changeGridColumns(document.getElementById('gridColumns').value);"></td>
+  </tr>
+  <tr>
+    <td>Maximum Grid Columns:</td>
+    <td><input id="maxGridColumns" type="text" size="3"></td>
+    <td><input type="button" value="change" onclick="gameGrid.setMaxGridColumns(document.getElementById('maxGridColumns').value);"></td>
+  </tr>
+  <tr>
+    <td>Minimum Grid Rows:</td>
+    <td><input id="minGridRows" type="text" size="3"></td>
+    <td><input type="button" value="change" onclick="gameGrid.setMinGridRows(document.getElementById('minGridRows').value);"></td>
+  </tr>
+  <tr>
+    <td>Grid Rows:</td>
+    <td><input id="gridRows" type="text" size="3"></td>
+    <td><input type="button" value="change" onclick="gameGrid.changeGridRows(document.getElementById('gridRows').value);"></td>
+  </tr>
+  <tr>
+    <td>Maximum Grid Rows:</td>
+    <td><input id="maxGridRows" type="text" size="3"></td>
+    <td><input type="button" value="change" onclick="gameGrid.setMaxGridRows(document.getElementById('maxGridRows').value);"></td>
+  </tr>
+</table>
+</td>
+<td>
   <canvas id="canvas" tabindex="1">
   This text is displayed if your browser does not support HTML5 Canvas.
   </canvas>
+</td>
+  </tr>
+</table>
 </html>
