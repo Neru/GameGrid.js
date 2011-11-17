@@ -62,7 +62,7 @@ function GameGrid(newCanvas) {
 	
 	var backgroundImage;
 	var backgroundColor = "#EEEEEE";
-	var gridLineColor = "#000000"
+	var lineColor = "#000000"
 	
 	var ee = new EventEmitter();
 
@@ -99,7 +99,7 @@ function GameGrid(newCanvas) {
 		//draw either background image or color
 		drawBackground(); 
 		
-		context.fillStyle = gridLineColor;
+		context.fillStyle = lineColor;
 		context.beginPath();
 		// vertical lines:
 		// | | | |
@@ -409,8 +409,8 @@ function GameGrid(newCanvas) {
 		maxLineWidth = newMaxLineWidth;
 	};
 	
-	this.setGridLineColor = function(newGridLineColor) {
-		gridLineColor = newGridLineColor;
+	this.setLineColor = function(newLineColor) {
+		lineColor = newLineColor;
 	};
 	
 	this.setBackgroundColor = function(newBackgroundColor) {
@@ -811,12 +811,12 @@ function GameGrid(newCanvas) {
 		drawBackground = drawBackgroundImage;
 	};
 	
-	this.translateGrid = function (x, y) {
+	this.moveGrid = function (x, y) {
 		var vector = vec3.create([x, y, 0]);
 		mat4.translate(matrix, vector);
 	};
 	
-	this.centerGridAt = function (X, Y) {
+	this.centerGrid = function (X, Y) {
 		var dx = X - centerX;
 		var dy = Y - centerY;
 		
