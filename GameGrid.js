@@ -1,5 +1,6 @@
 /**
  * TODO:
+ * changeLineWidth
  * check changeCanvasHeight cellSizeOnResize
  * weights (^1/2) for changeCanvasSize
  * image and geo coordinate system
@@ -33,44 +34,44 @@ function GameGrid(newCanvas) {
 
 	var gridColumns = 9; //x
 	var gridRows = 9; //y
-	var cellWidth = 50;
+	var cellSize = 50;
 	var lineWidth = context.lineWidth = 1;
 	
-	var lineWidthFunction = function (cellWidth) {
+	var lineWidthFunction = function (cellSize) {
 		return 1;
 	};
 
 	var minCanvasWidth = 1;
-	var maxCanvasWidth = Number.MAX_VALUE;
+	var maxCanvasWidth = 10000;
 	var minCanvasHeight = 1;
-	var maxCanvasHeight = Number.MAX_VALUE;
+	var maxCanvasHeight = 10000;
 	var minGridColumns = 1;
-	var maxGridColumns = Number.MAX_VALUE;
+	var maxGridColumns = 100;
 	var minGridRows = 1;
-	var maxGridRows = Number.MAX_VALUE;
-	var minCellWidth = 1;
-	var maxCellWidth = Number.MAX_VALUE;
+	var maxGridRows = 100;
+	var minCellSize = 1;
+	var maxCellSize = Number.MAX_VALUE;
 	var minLineWidth = 0;
 	var maxLineWidth = Number.MAX_VALUE;
 	
 	var gridCellClicked;
-	var cellWidthChanged;
+	var cellSizeChanged;
 	
 	var gridImages = [];
 	var matrix = mat4.create();
 	mat4.identity(matrix);
 	
 	var backgroundImage;
-	var backgroundColor = "#EEEEEE";
+	var backgroundColor = "#DDDDDD";
 	var lineColor = "#000000"
 	
 	var ee = new EventEmitter();
 
 	var drawGridImage = function (xCoord, yCoord, imageURL) {
 		var img = new Image();
-		var dx = that.getXShift() + lineWidth + xCoord * (cellWidth + lineWidth);
-		var dy = that.getYShift() + lineWidth + yCoord * (cellWidth + lineWidth);
-		var dw = cellWidth;
+		var dx = that.getXShift() + lineWidth + xCoord * (cellSize + lineWidth);
+		var dy = that.getYShift() + lineWidth + yCoord * (cellSize + lineWidth);
+		var dw = cellSize;
 
 		img.onload = function() {
 			context.drawImage(img, dx, dy, dw, dw);
@@ -99,22 +100,22 @@ function GameGrid(newCanvas) {
 		//draw either background image or color
 		drawBackground(); 
 		
-		context.fillStyle = lineColor;
+		context.strokeStyle = lineColor;
 		context.beginPath();
 		// vertical lines:
 		// | | | |
 		// | | | |
 		for (var i = 0; i <= gridColumns; i++) {
-			context.moveTo(that.getXShift() + (lineWidth / 2) + i * (cellWidth + lineWidth), that.getYShift());
-			context.lineTo(that.getXShift() + (lineWidth / 2) + i * (cellWidth + lineWidth), that.getYShift() + that.getGridHeight());
+			context.moveTo(that.getXShift() + (lineWidth / 2) + i * (cellSize + lineWidth), that.getYShift());
+			context.lineTo(that.getXShift() + (lineWidth / 2) + i * (cellSize + lineWidth), that.getYShift() + that.getGridHeight());
 		}
 		// horizontal lines:
 		//  _ _ _
 		//  _ _ _
 		//  _ _ _
 		for (var j = 0; j <= gridRows; j++) {
-			context.moveTo(that.getXShift(), that.getYShift() + (lineWidth / 2) + j * (cellWidth + lineWidth));
-			context.lineTo(that.getXShift() + that.getGridWidth(), that.getYShift() + (lineWidth / 2) + j * (cellWidth + lineWidth));
+			context.moveTo(that.getXShift(), that.getYShift() + (lineWidth / 2) + j * (cellSize + lineWidth));
+			context.lineTo(that.getXShift() + that.getGridWidth(), that.getYShift() + (lineWidth / 2) + j * (cellSize + lineWidth));
 		}
 		context.stroke();
 		
@@ -182,7 +183,7 @@ function GameGrid(newCanvas) {
 		var x = pointOnCanvas.x - that.getXShift();
 		var y = pointOnCanvas.y - that.getYShift();
 
-		var d = lineWidth + cellWidth;
+		var d = lineWidth + cellSize;
 
 		// clicked point lies outside the grid
 		if (x <= 0 || x > gridColumns * d) {
@@ -217,28 +218,28 @@ function GameGrid(newCanvas) {
 		return gridCoordinate;
 	};
 	
-	var changeLineWidth = function (newCellWidth) {
-		var newLineWidth = lineWidthFunction(newCellWidth);
+	var changeLineWidth = function (newCellSize) {
+		var newLineWidth = lineWidthFunction(newCellSize);
 		
 		minMaxCheck(minLineWidth, maxLineWidth, newLineWidth);
 		
-		newCellWidth = cellWidth - (newLineWidth - lineWidth);
-		if (newCellWidth < minCellWidth) {
-			newLineWidth = newLineWidth - (newCellWidth - minCellWidth);
-			newCellWidth = minCellWidth;
-		} else if (newCellWidth > maxCellWidth) {
-			newCellWidth = maxCellWidth;
+		newCellSize = cellSize - (newLineWidth - lineWidth);
+		if (newCellSize < minCellSize) {
+			newLineWidth = newLineWidth - (newCellSize - minCellSize);
+			newCellSize = minCellSize;
+		} else if (newCellSize > maxCellSize) {
+			newCellSize = maxCellSize;
 		}
 		
 		that.setLineWidth(newLineWidth);		
 	};
 	
 	this.getGridWidth = function() {
-		return lineWidth + gridColumns * (cellWidth + lineWidth);
+		return lineWidth + gridColumns * (cellSize + lineWidth);
 	};
 
 	this.getGridHeight = function() {
-		return lineWidth + gridRows * (cellWidth + lineWidth);
+		return lineWidth + gridRows * (cellSize + lineWidth);
 	};
 
 	this.getXShift = function() {
@@ -297,16 +298,16 @@ function GameGrid(newCanvas) {
 		return maxGridRows;
 	};
 	
-	this.getMinCellWidth = function() {
-		return minCellWidth;
+	this.getMinCellSize = function() {
+		return minCellSize;
 	};
 	
-	this.getCellWidth = function() {
-		return cellWidth;
+	this.getCellSize = function() {
+		return cellSize;
 	};
 	
-	this.getMaxCellWidth = function() {
-		return maxCellWidth;
+	this.getMaxCellSize = function() {
+		return maxCellSize;
 	};
 	
 	this.getMinLineWidth = function() {
@@ -321,6 +322,14 @@ function GameGrid(newCanvas) {
 		return maxLineWidth;
 	};
 	
+	this.getLineColor = function() {
+		return lineColor;
+	};
+	
+	this.getBackgroundColor = function() {
+		return backgroundColor;
+	};
+	
 	this.setMinCanvasWidth = function (newMinCanvasWidth) {
 		minCheck(newMinCanvasWidth, canvasWidth);
 		minCanvasWidth = newMinCanvasWidth;
@@ -329,6 +338,7 @@ function GameGrid(newCanvas) {
 	this.setCanvasWidth = function (newCanvasWidth) {
 		canvas.width = newCanvasWidth;
 		canvasWidth = newCanvasWidth;
+		ee.emit("canvasWidthChanged", newCanvasWidth);
 	};
 	
 	this.setMaxCanvasWidth = function (newMaxCanvasWidth) {
@@ -344,6 +354,7 @@ function GameGrid(newCanvas) {
 	this.setCanvasHeight = function (newCanvasHeight) {
 		canvas.height = newCanvasHeight;
 		canvasHeight = newCanvasHeight;
+		ee.emit("canvasHeightChanged", newCanvasHeight);
 	};
 	
 	this.setMaxCanvasHeight = function (newMaxCanvasHeight) {
@@ -358,6 +369,7 @@ function GameGrid(newCanvas) {
 	
 	this.setGridColumns = function (newGridColumns) {
 		gridColumns = newGridColumns;
+		ee.emit("gridColumnsChanged", newGridColumns);
 	};
 	
 	this.setMaxGridColumns = function (newMaxGridColumns) {
@@ -372,6 +384,7 @@ function GameGrid(newCanvas) {
 	
 	this.setGridRows = function (newGridRows) {
 		gridRows = newGridRows;
+		ee.emit("gridRowsChanged", newGridRows);
 	};
 	
 	this.setMaxGridRows = function (newMaxGridRows) {
@@ -379,19 +392,19 @@ function GameGrid(newCanvas) {
 		maxGridRows = newMaxGridRows;
 	};
 	
-	this.setMinCellWidth = function (newMinCellWidth) {
-		minCheck(newMinCellWidth, cellWidth);
-		minCellWidth = newMinCellWidth;
+	this.setMinCellSize = function (newMinCellSize) {
+		minCheck(newMinCellSize, cellSize);
+		minCellSize = newMinCellSize;
 	};
 	
-	this.setCellWidth = function (newCellWidth) {
-		cellWidth = newCellWidth;
-		ee.emit("cellSizeChanged", newCellWidth);
+	this.setCellSize = function (newCellSize) {
+		cellSize = newCellSize;
+		ee.emit("cellSizeChanged", newCellSize);
 	};
 		
-	this.setMaxCellWidth = function (newMaxCellWidth) {
-		maxCheck(newMaxCellWidth, cellWidth);
-		maxCellWidth = newMaxCellWidth;
+	this.setMaxCellSize = function (newMaxCellSize) {
+		maxCheck(newMaxCellSize, cellSize);
+		maxCellSize = newMaxCellSize;
 	}; 
 	
 	this.setMinLineWidth = function (newMinLineWidth) {
@@ -402,6 +415,7 @@ function GameGrid(newCanvas) {
 	this.setLineWidth = function (newLineWidth) {
 		lineWidth = newLineWidth;
 		context.lineWidth = lineWidth;
+		ee.emit("lineWidthChanged", newLineWidth);
 	};	
 	
 	this.setMaxLineWidth = function (newMaxLineWidth) {
@@ -413,8 +427,21 @@ function GameGrid(newCanvas) {
 		lineColor = newLineColor;
 	};
 	
+	this.setLineOpacity = function(newLineOpacity) {
+		
+	};
+	
 	this.setBackgroundColor = function(newBackgroundColor) {
 		backgroundColor = newBackgroundColor;
+	};
+	
+	this.setBackgroundOpacity = function(newBackgroundOpacity) {
+		
+	};
+	
+	this.setBackgroundImage = function (imageURL) {
+		backgroundImage = imageURL;
+		drawBackground = drawBackgroundImage;
 	};
 	
 	this.changeCanvasWidth = function (newCanvasWidth, option) {
@@ -422,25 +449,25 @@ function GameGrid(newCanvas) {
 	
 		switch(option) {
 		case "gridOnResize":
-			var newGridColumns = Math.floor((newCanvasWidth - lineWidth) / (cellWidth + lineWidth));
+			var newGridColumns = Math.floor((newCanvasWidth - lineWidth) / (cellSize + lineWidth));
 			
 			if(newGridColumns < minGridColumns) {
 				newGridColumns = minGridColumns;
-				newCanvasWidth = minGridColumns * (cellWidth + lineWidth) + lineWidth;
+				newCanvasWidth = minGridColumns * (cellSize + lineWidth) + lineWidth;
 			} else if(newGridColumns > maxGridColumns) {
 				newGridColumns = maxGridColumns;
 			} 
 			that.setGridColumns(newGridColumns);
 			break;
-		case "cellWidthOnResize":
-			var newCellWidth = Math.floor(((newCanvasWidth - lineWidth) / gridColumns) - lineWidth);
-			if(newCellWidth < minCellWidth) {
-				newCellWidth = minCellWidth;
-				newCanvasWidth = gridColumns * (minCellWidth + lineWidth) + lineWidth;
-			} else if(newCellWidth > maxCellWidth) {
-				newCellWidth = maxCellWidth;
+		case "cellSizeOnResize":
+			var newCellSize = Math.floor(((newCanvasWidth - lineWidth) / gridColumns) - lineWidth);
+			if(newCellSize < minCellSize) {
+				newCellSize = minCellSize;
+				newCanvasWidth = gridColumns * (minCellSize + lineWidth) + lineWidth;
+			} else if(newCellSize > maxCellSize) {
+				newCellSize = maxCellSize;
 			} 
-			that.setCellWidth(newCellWidth);
+			that.setCellSize(newCellSize);
 			break;
 		default:
 			if (newCanvasWidth < that.getGridWidth()) {
@@ -457,25 +484,25 @@ function GameGrid(newCanvas) {
 	
 		switch(option) {
 		case "gridOnResize":
-			var newGridRows = Math.floor((newCanvasHeight - lineWidth) / (cellWidth + lineWidth));
+			var newGridRows = Math.floor((newCanvasHeight - lineWidth) / (cellSize + lineWidth));
 			
 			if (newGridRows < minGridRows) {
 				newGridRows = minGridRows;
-				newCanvasHeight = minGridRows * (cellWidth + lineWidth) + lineWidth;
+				newCanvasHeight = minGridRows * (cellSize + lineWidth) + lineWidth;
 			} else if (newGridRows > maxGridRows) {
 				newGridRows = maxGridRows;
 			} 
 			that.setGridRows(newGridRows);
 			break;
-		case "cellWidthOnResize":
-			var newCellWidth = Math.floor(((newCanvasHeight - lineWidth) / gridRows) - lineWidth);
-			if (newCellWidth < minCellWidth) {
-				newCellWidth = minCellWidth;
-				newCanvasHeight = gridRows * (minCellWidth + lineWidth) + lineWidth;
-			} else if(newCellWidth > maxCellWidth) {
-				newCellWidth = maxCellWidth;
+		case "cellSizeOnResize":
+			var newCellSize = Math.floor(((newCanvasHeight - lineWidth) / gridRows) - lineWidth);
+			if (newCellSize < minCellSize) {
+				newCellSize = minCellSize;
+				newCanvasHeight = gridRows * (minCellSize + lineWidth) + lineWidth;
+			} else if(newCellSize > maxCellSize) {
+				newCellSize = maxCellSize;
 			} 
-			that.setCellWidth(newCellWidth);
+			that.setCellSize(newCellSize);
 			break;
 		default:
 			if (newCanvasHeight < that.getGridHeight()) {
@@ -492,20 +519,20 @@ function GameGrid(newCanvas) {
 	
 		switch(option) {
 		case "gridOnResize":
-			var newGridColumns = Math.floor((newCanvasWidth - lineWidth) / (cellWidth + lineWidth));
+			var newGridColumns = Math.floor((newCanvasWidth - lineWidth) / (cellSize + lineWidth));
 			
 			if(newGridColumns < minGridColumns) {
 				newGridColumns = minGridColumns;
-				newCanvasWidth = minGridColumns * (cellWidth + lineWidth) + lineWidth;
+				newCanvasWidth = minGridColumns * (cellSize + lineWidth) + lineWidth;
 			} else if(newGridColumns > maxGridColumns) {
 				newGridColumns = maxGridColumns;
 			} 
 			
-			var newGridRows = Math.floor((newCanvasHeight - lineWidth) / (cellWidth + lineWidth));
+			var newGridRows = Math.floor((newCanvasHeight - lineWidth) / (cellSize + lineWidth));
 			
 			if(newGridRows < minGridRows) {
 				newGridRows = minGridRows;
-				newCanvasHeight = minGridRows * (cellWidth + lineWidth) + lineWidth;
+				newCanvasHeight = minGridRows * (cellSize + lineWidth) + lineWidth;
 			} else if(newGridColumns > maxGridRows) {
 				newGridRows = maxGridRows;
 			} 
@@ -513,27 +540,27 @@ function GameGrid(newCanvas) {
 			that.setGridColumns(newGridColumns);
 			that.setGridRows(newGridRows);
 			break;
-		case "cellWidthOnResize":
-			var cellWidthForColumns = Math.floor(((newCanvasWidth - lineWidth) / gridColumns) - lineWidth);
-			if(cellWidthForColumns < minCellWidth) {
-				cellWidthForColumns = minCellWidth;
-				newCanvasWidth = gridColumns * (minCellWidth + lineWidth) + lineWidth;
-			} else if(cellWidthForColumns > maxCellWidth) {
-				cellWidthForColumns = maxCellWidth;
+		case "cellSizeOnResize":
+			var cellSizeForColumns = Math.floor(((newCanvasWidth - lineWidth) / gridColumns) - lineWidth);
+			if(cellSizeForColumns < minCellSize) {
+				cellSizeForColumns = minCellSize;
+				newCanvasWidth = gridColumns * (minCellSize + lineWidth) + lineWidth;
+			} else if(cellSizeForColumns > maxCellSize) {
+				cellSizeForColumns = maxCellSize;
 			} 
 			
-			var cellWidthForRows = Math.floor(((newCanvasHeight - lineWidth) / gridRows) - lineWidth);
-			if (cellWidthForRows < minCellWidth) {
-				cellWidthForRows = minCellWidth;
-				newCanvasHeight = gridRows * (minCellWidth + lineWidth) + lineWidth;
-			} else if (cellWidthForRows > maxCellWidth) {
-				cellWidthForRows = maxCellWidth;
+			var cellSizeForRows = Math.floor(((newCanvasHeight - lineWidth) / gridRows) - lineWidth);
+			if (cellSizeForRows < minCellSize) {
+				cellSizeForRows = minCellSize;
+				newCanvasHeight = gridRows * (minCellSize + lineWidth) + lineWidth;
+			} else if (cellSizeForRows > maxCellSize) {
+				cellSizeForRows = maxCellSize;
 			} 
 			
-			if (cellWidthForColumns < cellWidthForRows) {
-				that.setCellWidth(cellWidthForColumns);
+			if (cellSizeForColumns < cellSizeForRows) {
+				that.setCellSize(cellSizeForColumns);
 			} else {
-				that.setCellWidth(cellWidthForRows);
+				that.setCellSize(cellSizeForRows);
 			}
 			break;
 		default:
@@ -555,32 +582,32 @@ function GameGrid(newCanvas) {
 
 		switch(option) {
 		case "canvasOnResize":
-			var newCanvasWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
+			var newCanvasWidth = newGridColumns * (lineWidth + cellSize) + lineWidth;
 			
 			if (newCanvasWidth < minCanvasWidth) {
 				newCanvasWidth = minCanvasWidth;
 			} else if (newCanvasWidth > maxCanvasWidth) {
 				newCanvasWidth = maxCanvasWidth;
-				newGridColumns = Math.floor((maxCanvasWidth - lineWidth) / (cellWidth + lineWidth));
+				newGridColumns = Math.floor((maxCanvasWidth - lineWidth) / (cellSize + lineWidth));
 			}
 			that.setCanvasWidth(newCanvasWidth);
 			break;
-		case "cellWidthOnResize":		
-			var newCellWidth = Math.floor(((canvasWidth - lineWidth) / newGridColumns) - lineWidth);
+		case "cellSizeOnResize":		
+			var newCellSize = Math.floor(((canvasWidth - lineWidth) / newGridColumns) - lineWidth);
 			
-			if (newCellWidth < minCellWidth) {
-				newCellWidth = minCellWidth;
-				newGridColumns = Math.floor((canvasWidth - lineWidth) / (minCellWidth + lineWidth));
-			} else if (newCellWidth > maxCellWidth) {
-				newCellWidth = maxCellWidth;
+			if (newCellSize < minCellSize) {
+				newCellSize = minCellSize;
+				newGridColumns = Math.floor((canvasWidth - lineWidth) / (minCellSize + lineWidth));
+			} else if (newCellSize > maxCellSize) {
+				newCellSize = maxCellSize;
 			}	
-			that.setCellWidth(newCellWidth);
+			that.setCellSize(newCellSize);
 			break;
 		default:
-			var newGridWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
+			var newGridWidth = newGridColumns * (lineWidth + cellSize) + lineWidth;
 			
 			if (newGridWidth > canvasWidth) {
-				newGridColumns = Math.floor((canvasWidth - lineWidth) / (cellWidth + lineWidth));
+				newGridColumns = Math.floor((canvasWidth - lineWidth) / (cellSize + lineWidth));
 			}
 		}
 		
@@ -593,33 +620,33 @@ function GameGrid(newCanvas) {
 
 		switch(option) {
 		case "canvasOnResize":
-			var newCanvasHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
+			var newCanvasHeight = newGridRows * (lineWidth + cellSize) + lineWidth;
 			
 			if (newCanvasHeight < minCanvasHeight) {
 				newCanvasHeight = minCanvasHeight;
 			} else if (newCanvasHeight > maxCanvasHeight) {
 				newCanvasHeight = maxCanvasHeight;
-				newGridRows = Math.floor((maxCanvasHeight - lineWidth) / (cellWidth + lineWidth));
+				newGridRows = Math.floor((maxCanvasHeight - lineWidth) / (cellSize + lineWidth));
 			}
 				
 			that.setCanvasHeight(newCanvasHeight);
 			break;
-		case "cellWidthOnResize":		
-			var newCellWidth = Math.floor(((canvasHeight - lineWidth) / newGridRows) - lineWidth);
+		case "cellSizeOnResize":		
+			var newCellSize = Math.floor(((canvasHeight - lineWidth) / newGridRows) - lineWidth);
 			
-			if (newCellWidth < minCellWidth) {
-				newCellWidth = minCellWidth;
-				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellWidth + lineWidth));
-			} else if (newCellWidth > maxCellWidth) {
-				newCellWidth = maxCellWidth;
+			if (newCellSize < minCellSize) {
+				newCellSize = minCellSize;
+				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellSize + lineWidth));
+			} else if (newCellSize > maxCellSize) {
+				newCellSize = maxCellSize;
 			}	
-			that.setCellWidth(newCellWidth);
+			that.setCellSize(newCellSize);
 			break;
 		default:
-			var newGridHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
+			var newGridHeight = newGridRows * (lineWidth + cellSize) + lineWidth;
 
 			if (newGridHeight > canvasHeight) {
-				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellWidth + lineWidth));
+				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellSize + lineWidth));
 			}
 		}
 		
@@ -633,61 +660,61 @@ function GameGrid(newCanvas) {
 
 		switch(option) {
 		case "canvasOnResize":
-			var newCanvasWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
+			var newCanvasWidth = newGridColumns * (lineWidth + cellSize) + lineWidth;
 			
 			if (newCanvasWidth < minCanvasWidth) {
 				newCanvasWidth = minCanvasWidth;
 			} else if (newCanvasWidth > maxCanvasWidth) {
 				newCanvasWidth = maxCanvasWidth;
-				newGridColumns = Math.floor((maxCanvasWidth - lineWidth) / (cellWidth + lineWidth));
+				newGridColumns = Math.floor((maxCanvasWidth - lineWidth) / (cellSize + lineWidth));
 			}
 			
-			var newCanvasHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
+			var newCanvasHeight = newGridRows * (lineWidth + cellSize) + lineWidth;
 			
 			if (newCanvasHeight < minCanvasHeight) {
 				newCanvasHeight = minCanvasHeight;
 			} else if (newCanvasHeight > maxCanvasHeight) {
 				newCanvasHeight = maxCanvasHeight;
-				newGridColumns = Math.floor((maxCanvasHeight - lineWidth) / (cellWidth + lineWidth));
+				newGridColumns = Math.floor((maxCanvasHeight - lineWidth) / (cellSize + lineWidth));
 			}
 				
 			that.setCanvasWidth(newCanvasWidth);
 			that.setCanvasHeight(newCanvasHeight);
 			break;
-		case "cellWidthOnResize":
-			var cellWidthForColumns = Math.floor(((canvasWidth - lineWidth) / newGridColumns) - lineWidth);
+		case "cellSizeOnResize":
+			var cellSizeForColumns = Math.floor(((canvasWidth - lineWidth) / newGridColumns) - lineWidth);
 			
-			if (cellWidthForColumns < minCellWidth) {
-				cellWidthForColumns = minCellWidth;
-				newGridColumns = Math.floor((canvasWidth - lineWidth) / (minCellWidth + lineWidth));
-			} else if (cellWidthForColumns > maxCellWidth) {
-				cellWidthForColumns = maxCellWidth;
+			if (cellSizeForColumns < minCellSize) {
+				cellSizeForColumns = minCellSize;
+				newGridColumns = Math.floor((canvasWidth - lineWidth) / (minCellSize + lineWidth));
+			} else if (cellSizeForColumns > maxCellSize) {
+				cellSizeForColumns = maxCellSize;
 			}
-			var cellWidthForRows = Math.floor(((canvasHeight - lineWidth) / newGridRows) - lineWidth);
+			var cellSizeForRows = Math.floor(((canvasHeight - lineWidth) / newGridRows) - lineWidth);
 			
-			if (cellWidthForRows < minCellWidth) {
-				cellWidthForRows = minCellWidth;
-				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellWidth + lineWidth));
-			} else if (cellWidthForRows > maxCellWidth) {
-				cellWidthForRows = maxCellWidth;
+			if (cellSizeForRows < minCellSize) {
+				cellSizeForRows = minCellSize;
+				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellSize + lineWidth));
+			} else if (cellSizeForRows > maxCellSize) {
+				cellSizeForRows = maxCellSize;
 			}
 			
-			if (cellWidthForColumns < cellWidthForRows) {
-				that.setCellWidth(cellWidthForColumns);
+			if (cellSizeForColumns < cellSizeForRows) {
+				that.setCellSize(cellSizeForColumns);
 			} else {
-				that.setCellWidth(cellWidthForRows);
+				that.setCellSize(cellSizeForRows);
 			}
 			break;
 		default:
-			var newGridWidth = newGridColumns * (lineWidth + cellWidth) + lineWidth;
+			var newGridWidth = newGridColumns * (lineWidth + cellSize) + lineWidth;
 			
 			if (newGridWidth > canvasWidth) {
-				newGridColumns = Math.floor((canvasWidth - lineWidth) / (cellWidth + lineWidth));
+				newGridColumns = Math.floor((canvasWidth - lineWidth) / (cellSize + lineWidth));
 			}	
-			var newGridHeight = newGridRows * (lineWidth + cellWidth) + lineWidth;
+			var newGridHeight = newGridRows * (lineWidth + cellSize) + lineWidth;
 
 			if (newGridHeight > canvasHeight) {
-				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellWidth + lineWidth));
+				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellSize + lineWidth));
 			}
 		}
 		that.setGridColumns(newGridColumns);
@@ -696,35 +723,35 @@ function GameGrid(newCanvas) {
 		repaint();
 	};
 	
-	this.changeCellWidth = function (newCellWidth, option) {
-		minMaxCheck(minCellWidth, maxCellWidth, newCellWidth);
+	this.changeCellSize = function (newCellSize, option) {
+		minMaxCheck(minCellSize, maxCellSize, newCellSize);
 		
-		var cellWidthForColumns;
-		var cellWidthForRows;
+		var cellSizeForColumns;
+		var cellSizeForRows;
 		switch (option) {
 		case "canvasOnResize":
-			var newCanvasWidth = gridColumns * (lineWidth + newCellWidth) + lineWidth;	
+			var newCanvasWidth = gridColumns * (lineWidth + newCellSize) + lineWidth;	
 				
 			if (newCanvasWidth < minCanvasWidth) {
 				newCanvasWidth = minCanvasWidth;
-				cellWidthForColumns = newCellWidth;
+				cellSizeForColumns = newCellSize;
 			} else if (newCanvasWidth > maxCanvasWidth) {
 				newCanvasWidth = maxCanvasWidth;
-				cellWidthForColumns = Math.floor(((maxCanvasWidth - lineWidth) / gridColumns) - lineWidth);
+				cellSizeForColumns = Math.floor(((maxCanvasWidth - lineWidth) / gridColumns) - lineWidth);
 			} else {
-				cellWidthForColumns = newCellWidth;
+				cellSizeForColumns = newCellSize;
 			}
 		
-			var newCanvasHeight = gridRows * (lineWidth + newCellWidth) + lineWidth;
+			var newCanvasHeight = gridRows * (lineWidth + newCellSize) + lineWidth;
 			
 			if (newCanvasHeight < minCanvasHeight) {
 				newCanvasHeight = minCanvasHeight;
-				cellWidthForRows = newCellWidth;
+				cellSizeForRows = newCellSize;
 			} else if (newCanvasHeight > maxCanvasHeight) {
 				newCanvasHeight = maxCanvasHeight;
-				cellWidthForRows = Math.floor(((maxCanvasHeight - lineWidth) / gridRows) - lineWidth);
+				cellSizeForRows = Math.floor(((maxCanvasHeight - lineWidth) / gridRows) - lineWidth);
 			} else {				
-				cellWidthForRows = newCellWidth;
+				cellSizeForRows = newCellSize;
 			}
 	
 			that.setCanvasWidth(newCanvasWidth);		
@@ -732,28 +759,28 @@ function GameGrid(newCanvas) {
 			break;
 			
 		case "gridOnResize":
-			var newGridColumns = Math.floor((canvasWidth - lineWidth) / (lineWidth + newCellWidth));
+			var newGridColumns = Math.floor((canvasWidth - lineWidth) / (lineWidth + newCellSize));
 			
 			if (newGridColumns < minGridColumns) {
 				newGridColumns = minGridColumns;
-				cellWidthForColumns = Math.floor(((canvasWidth - lineWidth) / minGridColumns) - lineWidth);
+				cellSizeForColumns = Math.floor(((canvasWidth - lineWidth) / minGridColumns) - lineWidth);
 			} else if (newGridColumns > maxGridColumns) {
 				newGridColumns = maxGridColumns;
-				cellWidthForColumns = newCellWidth;
+				cellSizeForColumns = newCellSize;
 			} else {
-				cellWidthForColumns = newCellWidth;
+				cellSizeForColumns = newCellSize;
 			}
 			
-			var newGridRows = Math.floor((canvasHeight - lineWidth) / (lineWidth + newCellWidth));
+			var newGridRows = Math.floor((canvasHeight - lineWidth) / (lineWidth + newCellSize));
 			
 			if (newGridRows < minGridRows) {
 				newGridRows = minGridRows;
-				cellWidthForRows = Math.floor(((canvasHeight - lineWidth) / minGridRows) - lineWidth);
+				cellSizeForRows = Math.floor(((canvasHeight - lineWidth) / minGridRows) - lineWidth);
 			} else if (newGridRows > maxGridRows) {
 				newGridRows = maxGridRows;
-				cellWidthForRows = newCellWidth;
+				cellSizeForRows = newCellSize;
 			} else {
-				cellWidthForRows = newCellWidth;
+				cellSizeForRows = newCellSize;
 			}
 	
 			that.setGridColumns(newGridColumns);		
@@ -761,29 +788,29 @@ function GameGrid(newCanvas) {
 			break;
 			
 		default:
-			var newGridWidth = gridColumns * (lineWidth + newCellWidth) + lineWidth;
-			var newGridHeight = gridRows * (lineWidth + newCellWidth) + lineWidth;
+			var newGridWidth = gridColumns * (lineWidth + newCellSize) + lineWidth;
+			var newGridHeight = gridRows * (lineWidth + newCellSize) + lineWidth;
 			
 			if (newGridWidth > canvasWidth) {
-				cellWidthForColumns = Math.floor(((canvasWidth - lineWidth) / gridColumns) - lineWidth);
+				cellSizeForColumns = Math.floor(((canvasWidth - lineWidth) / gridColumns) - lineWidth);
 			} else {
-				cellWidthForColumns = newCellWidth;
+				cellSizeForColumns = newCellSize;
 			}
 			
 			if (newGridHeight > canvasHeight) {
-				cellWidthForRows = Math.floor(((canvasHeight - lineWidth) / gridRows) - lineWidth);
+				cellSizeForRows = Math.floor(((canvasHeight - lineWidth) / gridRows) - lineWidth);
 			} else {
-				cellWidthForRows = newCellWidth;
+				cellSizeForRows = newCellSize;
 			}
 		}
 		
-		if (cellWidthForColumns < cellWidthForRows) {
-			newCellWidth = cellWidthForColumns;
+		if (cellSizeForColumns < cellSizeForRows) {
+			newCellSize = cellSizeForColumns;
 		} else {
-			newCellWidth = cellWidthForRows;
+			newCellSize = cellSizeForRows;
 		}
 		
-		that.setCellWidth(newCellWidth);
+		that.setCellSize(newCellSize);
 	};
 	
 	this.addGridImage = function (xCoord, yCoord, imageURL) {
@@ -801,16 +828,6 @@ function GameGrid(newCanvas) {
 		gridImages[xCoord][yCoord] = null;
 	};
 	
-	this.setBackgroundColor = function (color) {
-		backgroundColor = color;
-		drawBackground = drawBackgroundColor;
-	};
-	
-	this.setBackgroundImage = function (imageURL) {
-		backgroundImage = imageURL;
-		drawBackground = drawBackgroundImage;
-	};
-	
 	this.moveGrid = function (x, y) {
 		var vector = vec3.create([x, y, 0]);
 		mat4.translate(matrix, vector);
@@ -826,7 +843,7 @@ function GameGrid(newCanvas) {
 	
 	this.rotateGrid90DegreesClockWise = function () {
 		//TODO swap changeGridColumns and Rows and canvasWidth and Height
-		//canvasOnResize, gridOnResize, cellWidthOnResize
+		//canvasOnResize, gridOnResize, cellSizeOnResize
 		var vector = vec3.create([-centerX, -centerY, 0]);
 		mat4.translate(matrix, vector);
 		mat4.rotateZ(matrix, Math.PI/2);
@@ -837,7 +854,7 @@ function GameGrid(newCanvas) {
 	
 	this.rotateGrid90DegreesAntiClockWise = function () {
 		//TODO swap changeGridColumns and Rows and canvasWidth and Height
-		//canvasOnResize, gridOnResize, cellWidthOnResize
+		//canvasOnResize, gridOnResize, cellSizeOnResize
 		var vector = vec3.create([-centerX, -centerY, 0]);
 		mat4.translate(matrix, vector);
 		mat4.rotateZ(matrix, -Math.PI/2);
@@ -861,18 +878,16 @@ function GameGrid(newCanvas) {
 		s += "Canvas height: " + canvasHeight + "\n"; //(" + minCanvasHeight + " - " + maxCanvasHeight + ")
 		s += "Grid columns: " + gridColumns + "\n"; //(" + minGridColumns + " - " + maxGridColumns + ")
 		s += "Grid rows: " + gridRows + "\n"; //(" + minGridRows + " - " + maxGridRows + ")
-		s += "Cell width: " + cellWidth + "\n"; //(" + minCellWidth + " - " + maxCellWidth + ")
+		s += "Cell size: " + cellSize + "\n"; //(" + minCellSize + " - " + maxCellSize + ")
 		s += "Line width: " + lineWidth + "\n"; //(" + minLineWidth + " - " + maxLineWidth + ")
 		s += "X-Shift: " + that.getXShift() + "\n";
 		s += "Y-Shift: " + that.getYShift() + "\n";
 		return s;
 	};
 	
-	this.addEventListener = function (eventName, callback) {
-		ee.addEventListener(eventName, callback);
+	this.on = function (eventName, callback) {
+		ee.addListener(eventName, callback);
 	};
-	
-	this.on = addEventListener;
 	
 	this.once = function (eventName, callback) {
 		ee.once(eventName, callback);
@@ -889,13 +904,13 @@ function GameGrid(newCanvas) {
 	canvasHeight = canvas.height;
 	
 	if (widthFactor > heightFactor) {
-		cellWidth = Math.floor(cellWidth / widthFactor);
+		cellSize = Math.floor(cellSize / widthFactor);
 	} else {
-		cellWidth = Math.floor(cellWidth / heightFactor);	
+		cellSize = Math.floor(cellSize / heightFactor);	
 	}
 	
-	gridColumns = Math.floor((canvasWidth - lineWidth) / (cellWidth + lineWidth));
-	gridRows = Math.floor((canvasHeight - lineWidth) / (cellWidth + lineWidth));
+	gridColumns = Math.floor((canvasWidth - lineWidth) / (cellSize + lineWidth));
+	gridRows = Math.floor((canvasHeight - lineWidth) / (cellSize + lineWidth));
 
 	ee.on("cellSizeChanged", changeLineWidth);
 

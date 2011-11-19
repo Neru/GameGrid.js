@@ -1,4 +1,10 @@
 <!DOCTYPE html>
+
+<!--
+	TODO:
+	- radioButton just check one
+	- color chooser 
+-->
 <html>  
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -24,21 +30,85 @@ input {
 	//spinner http://www.switchonthecode.com/tutorials/javascript-controls-the-spin-control
 	var gameGrid;
 	
-	function init() {
-		
+	function init() {	
 		var canvas = document.getElementById("canvas");
 		//canvas.onkeypress = keyPressed;
 		canvas.height = 1000;
 		canvas.width = -100;
 		gameGrid = new GameGrid(canvas);
-		
+		registerEvents();
+		getInititialValues();
 		//gameGrid.changeCanvasHeight(300, "gridOnResize");
-		//gameGrid.setCellWidth(10);
+		//gameGrid.setCellSize(10);
 		//MapGrid.drawMapObject(0, 1, "http://127.0.0.1:8020/RPG-API%20Client/WebContent/Door.png");
 		
 		// MapGrid.addClickedGridCellListener(function(point) {
-			// MapGrid.changeCellWidth(25, "gridOnResize");
+			// MapGrid.changeCellSize(25, "gridOnResize");
 		// });
+	}
+	
+	function registerEvents() {
+		gameGrid.on("canvasWidthChanged", function(newCanvasWidth) {
+			document.getElementById('canvasWidth').value = newCanvasWidth;
+		});
+		
+		gameGrid.on("canvasHeightChanged", function(newCanvasHeight) {
+			document.getElementById('canvasHeight').value = newCanvasHeight;
+		});
+		
+		gameGrid.on("gridColumnsChanged", function(newGridColumns) {
+			document.getElementById('gridColumns').value = newGridColumns;
+		});
+		
+		gameGrid.on("gridRowsChanged", function(newGridRows) {
+			document.getElementById('gridRows').value = newGridRows;
+		});		
+		
+		gameGrid.on("cellSizeChanged", function(newCellSize) {
+			document.getElementById('cellSize').value = newCellSize;
+		});
+		
+		gameGrid.on("lineWidthChanged", function(newLineWidth) {
+			document.getElementById('lineWidth').value = newLineWidth;
+		});
+	}
+	
+	function getInititialValues() {
+		document.getElementById('minCanvasWidth').value = gameGrid.getMinCanvasWidth();
+		document.getElementById('canvasWidth').value = gameGrid.getCanvasWidth();
+		document.getElementById('maxCanvasWidth').value = gameGrid.getMaxCanvasWidth();
+		document.getElementById('minCanvasHeight').value = gameGrid.getMinCanvasHeight();
+		document.getElementById('canvasHeight').value = gameGrid.getCanvasHeight();
+		document.getElementById('maxCanvasHeight').value = gameGrid.getMaxCanvasHeight();
+		document.getElementById('minGridColumns').value = gameGrid.getMinGridColumns();
+		document.getElementById('gridColumns').value = gameGrid.getGridColumns();
+		document.getElementById('maxGridColumns').value = gameGrid.getMaxGridColumns();
+		document.getElementById('minGridRows').value = gameGrid.getMinGridRows();
+		document.getElementById('gridRows').value = gameGrid.getGridRows();
+		document.getElementById('maxGridRows').value = gameGrid.getMaxGridRows();
+		document.getElementById('minCellSize').value = gameGrid.getMinCellSize();
+		document.getElementById('cellSize').value = gameGrid.getCellSize();
+		document.getElementById('maxCellSize').value = gameGrid.getMaxCellSize();
+		document.getElementById('minLineWidth').value = gameGrid.getMinLineWidth();
+		document.getElementById('lineWidth').value = gameGrid.getLineWidth();
+		document.getElementById('maxLineWidth').value = gameGrid.getMaxLineWidth();
+		
+		//document.getElementById('lineWidthFunction').value = gameGrid.getLineWidthFunction();
+		
+		document.getElementById('backgroundColor').value = gameGrid.getBackgroundColor();
+		document.getElementById('lineColor').value = gameGrid.getLineColor();
+	}
+	
+	function getResizingOption() {
+		if (document.ResizingOptions.canvasOnResize.checked) {
+			return document.ResizingOptions.canvasOnResize.value;
+		} else if (document.ResizingOptions.gridOnResize.checked) {
+			return document.ResizingOptions.gridOnResize.value;
+		} else if (document.ResizingOptions.cellSizeOnResize.checked) {
+			return document.ResizingOptions.cellSizeOnResize.value;
+		} else {
+			return null;
+		}
 	}
 	
 	function windowResized() {
@@ -65,49 +135,69 @@ input {
 
 </script>
 <body onLoad="init();">
-<h1>Gamegrid.js Sandbox</h1>
+<h1>Gamegrid.js (Sandbox)</h1>
 <table>
   <tr><td>
+Parameters:
 <table>
   <tr>
-    <td>Minimum Grid Columns:</td>
-    <td><input id="minGridColumns" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.setMinGridColumns(document.getElementById('minGridColumns').value);"></td>
+    <td>Canvas Width:</td>
+    <td><input id="canvasWidth" type="text" size="3"></td>
+    <td><input type="button" value="change" onClick="gameGrid.changeCanvasWidth(document.getElementById('canvasWidth').value, getResizingOption());"></td>
   </tr>
   <tr>
-    <td>Current Grid Columns:</td>
+    <td>Canvas Height:</td>
+    <td><input id="canvasHeight" type="text" size="3"></td>
+    <td><input type="button" value="change" onClick="gameGrid.changeCanvasHeight(document.getElementById('canvasHeight').value, getResizingOption());"></td>
+  </tr> 
+  <tr>
+    <td>Grid Columns:</td>
     <td><input id="gridColumns" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.changeGridColumns(document.getElementById('gridColumns').value);"></td>
+    <td><input type="button" value="change" onClick="gameGrid.changeGridColumns(document.getElementById('gridColumns').value, getResizingOption());"></td>
   </tr>
   <tr>
-    <td>Maximum Grid Columns:</td>
-    <td><input id="maxGridColumns" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.setMaxGridColumns(document.getElementById('maxGridColumns').value);"></td>
-  </tr>
-  <tr>
-    <td>Minimum Grid Rows:</td>
-    <td><input id="minGridRows" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.setMinGridRows(document.getElementById('minGridRows').value);"></td>
-  </tr>
-  <tr>
-    <td>Current Grid Rows:</td>
+    <td>Grid Rows:</td>
     <td><input id="gridRows" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.changeGridRows(document.getElementById('gridRows').value);"></td>
+    <td><input type="button" value="change" onClick="gameGrid.changeGridRows(document.getElementById('gridRows').value, getResizingOption());"></td>
   </tr>
   <tr>
-    <td>Maximum Grid Rows:</td>
-    <td><input id="maxGridRows" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.setMaxGridRows(document.getElementById('maxGridRows').value);"></td>
-  </tr>
-    <tr>
+    <td>Cell Size:</td>
+    <td><input id="cellSize" type="text" size="3"></td>
+    <td><input type="button" value="change" onClick="gameGrid.changeCellSize(document.getElementById('cellSize').value, getResizingOption());"></td>
+  </tr>  
+  <tr>
+    <td>Line Width:</td>
+    <td><input id="lineWidth" type="text" size="3" disabled></td>
+  </tr>  
+</table>
+<br>
+Current Line Width Function:<br>
+<textarea id="lineWidthFunction" rows="5" cols="30"></textarea><br>
+<input type="button" value="change" onClick="gameGrid.changeLineWidthFunction(document.getElementById('lineWidthFunction').value);"><br>
+<form name="ResizingOptions">
+  <label>
+  <input type="radio" id="canvasOnResize" value="canvasOnResize" checked>
+    Change Canvas Height and Width On Resize</label>
+  <br>
+  <label>
+  <input type="radio" id="gridOnResize" value="gridOnResize">
+    Change Grid Columns and Rows On Resize</label>
+  <br>
+  <label>
+  <input type="radio" id="cellSizeOnResize" value="cellSizeOnResize">
+    Change Cell Size On Resize</label>
+  <br>
+  <label>
+  <input type="radio" id="none" value="">
+    None</label>
+  <br>
+</form>
+Parameter Boundaries:
+<table>
+  <tr>
     <td>Minimum Canvas Width:</td>
     <td><input id="minCanvasWidth" type="text" size="3"></td>
     <td><input type="button" value="change" onClick="gameGrid.setMinCanvasWidth(document.getElementById('minCanvasWidth').value);"></td>
-  </tr>
-  <tr>
-    <td>Current Canvas Width:</td>
-    <td><input id="canvasWidth" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.changeCanvasWidth(document.getElementById('canvasWidth').value);"></td>
   </tr>
   <tr>
     <td>Maximum Canvas Width:</td>
@@ -120,29 +210,39 @@ input {
     <td><input type="button" value="change" onClick="gameGrid.setMinCanvasHeight(document.getElementById('minCanvasHeight').value);"></td>
   </tr>
   <tr>
-    <td>Current Canvas Height:</td>
-    <td><input id="canvasHeight" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.changeCanvasHeight(document.getElementById('canvasHeight').value);"></td>
-  </tr>
-  <tr>
     <td>Maximum Canvas Height:</td>
     <td><input id="maxCanvasHeight" type="text" size="3"></td>
     <td><input type="button" value="change" onClick="gameGrid.setMaxCanvasHeight(document.getElementById('maxCanvasHeight').value);"></td>
   </tr>
   <tr>
-    <td>Minimum Cell Width:</td>
-    <td><input id="minCellWidth" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.setMinCellWidth(document.getElementById('minCellWidth').value);"></td>
+    <td>Minimum Grid Columns:</td>
+    <td><input id="minGridColumns" type="text" size="3"></td>
+    <td><input type="button" value="change" onClick="gameGrid.setMinGridColumns(document.getElementById('minGridColumns').value);"></td>
   </tr>
   <tr>
-    <td>Current Cell Width:</td>
-    <td><input id="cellWidth" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.changeCellWidth(document.getElementById('cellWidth').value);"></td>
+    <td>Maximum Grid Columns:</td>
+    <td><input id="maxGridColumns" type="text" size="3"></td>
+    <td><input type="button" value="change" onClick="gameGrid.setMaxGridColumns(document.getElementById('maxGridColumns').value);"></td>
   </tr>
   <tr>
-    <td>Maximum Cell Width:</td>
-    <td><input id="maxCellWidth" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.setMaxCellWidth(document.getElementById('maxCellWidth').value);"></td>
+    <td>Minimum Grid Rows:</td>
+    <td><input id="minGridRows" type="text" size="3"></td>
+    <td><input type="button" value="change" onClick="gameGrid.setMinGridRows(document.getElementById('minGridRows').value);"></td>
+  </tr>
+  <tr>
+    <td>Maximum Grid Rows:</td>
+    <td><input id="maxGridRows" type="text" size="3"></td>
+    <td><input type="button" value="change" onClick="gameGrid.setMaxGridRows(document.getElementById('maxGridRows').value);"></td>
+  </tr>  
+  <tr>
+    <td>Minimum Cell Size:</td>
+    <td><input id="minCellSize" type="text" size="3"></td>
+    <td><input type="button" value="change" onClick="gameGrid.setMinCellSize(document.getElementById('minCellSize').value);"></td>
+  </tr>
+  <tr>
+    <td>Maximum Cell Size:</td>
+    <td><input id="maxCellSize" type="text" size="3"></td>
+    <td><input type="button" value="change" onClick="gameGrid.setMaxCellSize(document.getElementById('maxCellSize').value);"></td>
   </tr>
   <tr>
     <td>Minimum Line Width:</td>
@@ -150,47 +250,22 @@ input {
     <td><input type="button" value="change" onClick="gameGrid.setMinLineWidth(document.getElementById('minLineWidth').value);"></td>
   </tr>
   <tr>
-    <td>Current Line Width:</td>
-    <td><input id="lineWidth" type="text" size="3" disabled></td>
-  </tr>  
-  <tr>
     <td>Maximum Line Width:</td>
     <td><input id="maxLineWidth" type="text" size="3"></td>
     <td><input type="button" value="change" onClick="gameGrid.setMaxLineWidth(document.getElementById('maxLineWidth').value);"></td>
   </tr>
 </table>
 <br>
-Current Line Width Function:<br>
-<textarea id="lineWidthFunction" rows="5" cols="30"></textarea><br>
-<input type="button" value="change" onClick="gameGrid.changeLineWidthFunction(document.getElementById('lineWidthFunction').value);"><br>
-<p>
-  <label>
-  <input type="radio" id="canvasOnResize" value="canvasOnResize" checked>
-    Change Canvas Height and Width On Resize</label>
-  <br>
-  <label>
-  <input type="radio" id="gridOnResize" value="gridOnResize">
-    Change Grid Columns and Rows On Resize</label>
-  <br>
-  <label>
-  <input type="radio" id="cellWidthOnResize" value="cellWidthOnResize">
-    Change Cell Width On Resize</label>
-  <br>
-  <label>
-  <input type="radio" id="none" value="">
-    None</label>
-  <br>
-</p>
 <table>
   <tr>
     <td>Background Color:</td>
     <td><input id="backgroundColor" type="text" size="7"></td>
-	<td><input type="button" value="change" onClick="gameGrid.changeBackgroundColor(document.getElementById('backgroundColor').value);"></td>
+	<td><input type="button" value="change" onClick="gameGrid.setBackgroundColor(document.getElementById('backgroundColor').value);"></td>
   </tr>  
   <tr>
     <td>Line color:</td>
     <td><input id="lineColor" type="text" size="7"></td>
-    <td><input type="button" value="change" onClick="gameGrid.changeLineColor(document.getElementById('lineColor').value);"></td>
+    <td><input type="button" value="change" onClick="gameGrid.setLineColor(document.getElementById('lineColor').value);"></td>
   </tr>
 </table>
 <br>
