@@ -1,14 +1,14 @@
 /**
  * TODO:
- * changeLineWidth
- * check changeCanvasHeight cellSizeOnResize
+ * check changeCanvasHeight cellSizeOnResize & changeCellSize
+ * lineWidth Function?
  * weights (^1/2) for changeCanvasSize
  * image and geo coordinate system
  * coordinate change listener (mouse over or http://www.html5canvastutorials.com/advanced/html5-canvas-path-mouseover/)
  * mark cell
  * 
  * Enhancements:
- * improve getGridCoordinate [which line clicked, where outside grid]
+ * improve getGridCoordinate [which line clicked, where outside grid] --> Regions
  * drag images from one cell to the other?
  * distanceToGridFromBorder(min, max)
  * adjustable alignment of grid in canvas (center, left, right)
@@ -95,7 +95,7 @@ function GameGrid(newCanvas) {
 	var drawBackground = drawBackgroundColor;
 
 	var repaint = function() {
-		alert(that.toString());
+		//alert(that.toString());
 			
 		//draw either background image or color
 		drawBackground(); 
@@ -811,6 +811,16 @@ function GameGrid(newCanvas) {
 		}
 		
 		that.setCellSize(newCellSize);
+	};
+	
+	this.changeBackgroundColor = function (newColor) {
+		that.setBackgroundColor(newColor);
+		repaint();
+	};
+	
+	this.changeLineColor = function (newColor) {
+		that.setLineColor(newColor);
+		repaint();
 	};
 	
 	this.addGridImage = function (xCoord, yCoord, imageURL) {

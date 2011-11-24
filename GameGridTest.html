@@ -2,8 +2,9 @@
 
 <!--
 	TODO:
-	- radioButton just check one
-	- color chooser 
+	- spinner http://www.switchonthecode.com/tutorials/javascript-controls-the-spin-control
+	- opacity
+	- event output
 -->
 <html>  
 <head>
@@ -24,22 +25,27 @@ input {
 <script type="text/javascript" src="GameGrid.js"></script>
 <script type="text/javascript" src="EventEmitter.js"></script>
 <script type="text/javascript" src="gl-matrix.js"></script>
+<script type="text/javascript" src="jscolor/jscolor.js"></script>
+<link type="text/css" href="css/smoothness/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
 <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script type="text/javascript" src="jquery-ui-1.8.16.custom.min.js"></script>
 <script type="text/javascript">
 
-	//spinner http://www.switchonthecode.com/tutorials/javascript-controls-the-spin-control
+	//initialize accordion component from jquery-ui
+	$(function() {
+		$( "#accordion" ).accordion({autoHeight: false});
+	});
+	
 	var gameGrid;
 	
 	function init() {	
 		var canvas = document.getElementById("canvas");
 		//canvas.onkeypress = keyPressed;
-		canvas.height = 1000;
+		canvas.height = 500;
 		canvas.width = -100;
 		gameGrid = new GameGrid(canvas);
 		registerEvents();
 		getInititialValues();
-		//gameGrid.changeCanvasHeight(300, "gridOnResize");
-		//gameGrid.setCellSize(10);
 		//MapGrid.drawMapObject(0, 1, "http://127.0.0.1:8020/RPG-API%20Client/WebContent/Door.png");
 		
 		// MapGrid.addClickedGridCellListener(function(point) {
@@ -95,19 +101,18 @@ input {
 		
 		//document.getElementById('lineWidthFunction').value = gameGrid.getLineWidthFunction();
 		
-		document.getElementById('backgroundColor').value = gameGrid.getBackgroundColor();
-		document.getElementById('lineColor').value = gameGrid.getLineColor();
+		document.getElementById('backgroundColorPicker').value = gameGrid.getBackgroundColor();
+		document.getElementById('lineColorPicker').value = gameGrid.getLineColor();
 	}
 	
 	function getResizingOption() {
-		if (document.ResizingOptions.canvasOnResize.checked) {
-			return document.ResizingOptions.canvasOnResize.value;
-		} else if (document.ResizingOptions.gridOnResize.checked) {
-			return document.ResizingOptions.gridOnResize.value;
-		} else if (document.ResizingOptions.cellSizeOnResize.checked) {
-			return document.ResizingOptions.cellSizeOnResize.value;
-		} else {
-			return null;
+		var resizingOptions = document.getElementsByName("resizingOption");
+		
+		for (var i = 0; i < resizingOptions.length; i++) {
+			var resizingOption = resizingOptions[i];
+			if (resizingOption.checked) {
+				return resizingOption.value;
+			}
 		}
 	}
 	
@@ -138,7 +143,22 @@ input {
 <h1>Gamegrid.js (Sandbox)</h1>
 <table>
   <tr><td>
-Parameters:
+  
+<div id="accordion">
+    <h3><a href="#">Parameters</a></h3>  
+<div> 
+Resizing Options:
+<form name="ResizingOptions">
+  <label><input type="radio" name="resizingOption" value="canvasOnResize" checked>Dynamic Canvas Height and Width</label>
+  <br>
+  <label><input type="radio" name="resizingOption" value="gridOnResize">Dynamic Grid Columns and Rows</label>
+  <br>
+  <label><input type="radio" name="resizingOption" value="cellSizeOnResize">Dynamic Cell Size</label>
+  <br>
+  <label><input type="radio" name="resizingOption" value="none">None</label>
+  <br>
+</form>
+<br>
 <table>
   <tr>
     <td>Canvas Width:</td>
@@ -174,25 +194,11 @@ Parameters:
 Current Line Width Function:<br>
 <textarea id="lineWidthFunction" rows="5" cols="30"></textarea><br>
 <input type="button" value="change" onClick="gameGrid.changeLineWidthFunction(document.getElementById('lineWidthFunction').value);"><br>
-<form name="ResizingOptions">
-  <label>
-  <input type="radio" id="canvasOnResize" value="canvasOnResize" checked>
-    Change Canvas Height and Width On Resize</label>
-  <br>
-  <label>
-  <input type="radio" id="gridOnResize" value="gridOnResize">
-    Change Grid Columns and Rows On Resize</label>
-  <br>
-  <label>
-  <input type="radio" id="cellSizeOnResize" value="cellSizeOnResize">
-    Change Cell Size On Resize</label>
-  <br>
-  <label>
-  <input type="radio" id="none" value="">
-    None</label>
-  <br>
-</form>
-Parameter Boundaries:
+</div><!-- Parameters -->
+
+    <h3><a href="#">Parameter Boundaries</a></h3>
+    <div>
+
 <table>
   <tr>
     <td>Minimum Canvas Width:</td>
@@ -255,20 +261,25 @@ Parameter Boundaries:
     <td><input type="button" value="change" onClick="gameGrid.setMaxLineWidth(document.getElementById('maxLineWidth').value);"></td>
   </tr>
 </table>
-<br>
+</div> <!-- Parameter boundaries -->
+
+    <h3><a href="#">Layout</a></h3>
+    <div>
 <table>
   <tr>
     <td>Background Color:</td>
-    <td><input id="backgroundColor" type="text" size="7"></td>
-	<td><input type="button" value="change" onClick="gameGrid.setBackgroundColor(document.getElementById('backgroundColor').value);"></td>
+    <td><input class="color {hash:true, pickerClosable:true}" id="backgroundColorPicker" onchange= "gameGrid.changeBackgroundColor(document.getElementById('backgroundColorPicker').value); "></td>
   </tr>  
   <tr>
     <td>Line color:</td>
-    <td><input id="lineColor" type="text" size="7"></td>
-    <td><input type="button" value="change" onClick="gameGrid.setLineColor(document.getElementById('lineColor').value);"></td>
+    <td><input class="color {hash:true, pickerClosable:true}" id="lineColorPicker" onchange= "gameGrid.changeLineColor(document.getElementById('lineColorPicker').value) "></td>
   </tr>
 </table>
-<br>
+
+</div> <!-- Layout -->
+<h3><a href="#">Rest</a></h3>
+<div>
+
 Game To Grid Coordinatesystem Conversion Matrix:<br>
 <input id="matrix" type="text" size="30"><input type="button" value="change" onClick="gameGrid.changeMatrix(document.getElementById('matrix').value);"><br>
 <br>
@@ -292,6 +303,9 @@ Y Coordinate: <input id="centerY" type="text" size="3"><br>
 <input type="button" value="Rotate Grid 90° (anti-clockwise)" onClick="gameGrid.rotate90DegreesAntiClockwise();"><br>
 <input type="button" value="Rotate Grid 180°" onClick="gameGrid.rotate180Degrees();"><br>
 </td>
+</div> <!-- Rest -->
+</div> <!-- accordion -->
+
 <td>
   <canvas id="canvas" tabindex="1">
   This text is displayed if your browser does not support HTML5 Canvas.
