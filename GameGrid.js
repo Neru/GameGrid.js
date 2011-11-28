@@ -63,7 +63,9 @@ function GameGrid(newCanvas) {
 	
 	var backgroundImage;
 	var backgroundColor = "#DDDDDD";
-	var lineColor = "#000000"
+	var backgroundOpacity = 0.5;
+	var lineColor = "#000000";
+	var lineOpacity = 0.75;
 	
 	var ee = new EventEmitter();
 
@@ -80,7 +82,11 @@ function GameGrid(newCanvas) {
 	};
 	
 	var drawBackgroundColor = function () {
+		context.fillStyle = "#FFFFFF";
+		context.globalAlpha = 1;
+		context.fillRect(0, 0, canvasWidth, canvasHeight);
 		context.fillStyle = backgroundColor;
+		context.globalAlpha = backgroundOpacity;
 		context.fillRect(0, 0, canvasWidth, canvasHeight);
 	};
 	
@@ -101,6 +107,7 @@ function GameGrid(newCanvas) {
 		drawBackground(); 
 		
 		context.strokeStyle = lineColor;
+		context.globalAlpha = lineOpacity;
 		context.beginPath();
 		// vertical lines:
 		// | | | |
@@ -326,8 +333,16 @@ function GameGrid(newCanvas) {
 		return lineColor;
 	};
 	
+	this.getLineOpacity = function() {
+		return lineOpacity;
+	};
+	
 	this.getBackgroundColor = function() {
 		return backgroundColor;
+	};
+	
+	this.getBackgroundOpacity = function() {
+		return backgroundOpacity;
 	};
 	
 	this.setMinCanvasWidth = function (newMinCanvasWidth) {
@@ -428,7 +443,7 @@ function GameGrid(newCanvas) {
 	};
 	
 	this.setLineOpacity = function(newLineOpacity) {
-		
+		lineOpacity = newLineOpacity;
 	};
 	
 	this.setBackgroundColor = function(newBackgroundColor) {
@@ -436,7 +451,7 @@ function GameGrid(newCanvas) {
 	};
 	
 	this.setBackgroundOpacity = function(newBackgroundOpacity) {
-		
+		backgroundOpacity = newBackgroundOpacity;
 	};
 	
 	this.setBackgroundImage = function (imageURL) {
@@ -818,8 +833,18 @@ function GameGrid(newCanvas) {
 		repaint();
 	};
 	
+	this.changeBackgroundOpacity = function(newBackgroundOpacity) {
+		that.setBackgroundOpacity(newBackgroundOpacity);
+		repaint();
+	};
+	
 	this.changeLineColor = function (newColor) {
 		that.setLineColor(newColor);
+		repaint();
+	};
+	
+	this.changeLineOpacity = function(newLineOpacity) {
+		that.setLineOpacity(newLineOpacity);
 		repaint();
 	};
 	

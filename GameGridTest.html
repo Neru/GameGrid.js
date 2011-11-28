@@ -30,11 +30,6 @@ input {
 <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
 <script type="text/javascript" src="jquery-ui-1.8.16.custom.min.js"></script>
 <script type="text/javascript">
-
-	//initialize accordion component from jquery-ui
-	$(function() {
-		$( "#accordion" ).accordion({autoHeight: false});
-	});
 	
 	var gameGrid;
 	
@@ -102,8 +97,39 @@ input {
 		//document.getElementById('lineWidthFunction').value = gameGrid.getLineWidthFunction();
 		
 		document.getElementById('backgroundColorPicker').value = gameGrid.getBackgroundColor();
+		$("#backgroundOpacity").val(gameGrid.getBackgroundOpacity());
+		$("#backgroundOpacitySlider").slider( "option", "value", gameGrid.getBackgroundOpacity());
 		document.getElementById('lineColorPicker').value = gameGrid.getLineColor();
+		$("#lineOpacity").val(gameGrid.getLineOpacity());
+		$("#lineOpacitySlider").slider( "option", "value", gameGrid.getLineOpacity());
 	}
+	
+	//initialize accordion component from jquery-ui
+	$(function() {
+		$( "#accordion" ).accordion({autoHeight: false});
+		$( "#backgroundOpacitySlider" ).slider(
+			{value: 0,
+			min: 0,
+			max: 1,
+			step: 0.01,
+			slide: function( event, ui ) {
+				$( "#backgroundOpacity" ).val(ui.value);
+				gameGrid.changeBackgroundOpacity(ui.value);
+			}
+		});
+		$( "#lineOpacitySlider" ).slider(
+			{value: 0,
+			min: 0,
+			max: 1,
+			step: 0.01,
+			slide: function( event, ui ) {
+				$( "#lineOpacity" ).val(ui.value);
+				gameGrid.changeLineOpacity(ui.value);
+			}
+		});
+	});
+	
+	
 	
 	function getResizingOption() {
 		var resizingOptions = document.getElementsByName("resizingOption");
@@ -271,8 +297,16 @@ Current Line Width Function:<br>
     <td><input class="color {hash:true, pickerClosable:true}" id="backgroundColorPicker" onchange= "gameGrid.changeBackgroundColor(document.getElementById('backgroundColorPicker').value); "></td>
   </tr>  
   <tr>
+    <td>Background Opacity:</td>
+	<td><div id="backgroundOpacitySlider"></div><input type="text" id="backgroundOpacity" style="border:0"></td>
+  </tr>
+  <tr>
     <td>Line color:</td>
     <td><input class="color {hash:true, pickerClosable:true}" id="lineColorPicker" onchange= "gameGrid.changeLineColor(document.getElementById('lineColorPicker').value) "></td>
+  </tr>
+  <tr>
+    <td>Line Opacity:</td>
+	<td><div id="lineOpacitySlider"></div><input type="text" id="lineOpacity" style="border:0"></td>
   </tr>
 </table>
 
