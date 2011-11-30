@@ -3,7 +3,6 @@
 <!--
 	TODO:
 	- spinner http://www.switchonthecode.com/tutorials/javascript-controls-the-spin-control
-	- opacity
 	- event output
 -->
 <html>  
@@ -21,6 +20,9 @@ html, body {
 input {
   font-size:10px;
 }
+.spinner {
+	width:25px;
+}
 </style>
 <script type="text/javascript" src="GameGrid.js"></script>
 <script type="text/javascript" src="EventEmitter.js"></script>
@@ -29,6 +31,15 @@ input {
 <link type="text/css" href="css/smoothness/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
 <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
 <script type="text/javascript" src="jquery-ui-1.8.16.custom.min.js"></script>
+
+<!-- spinner -->
+<link rel="stylesheet" href="jquery-ui/themes/base/jquery.ui.all.css">
+<script src="jquery-ui/external/jquery.mousewheel-3.0.4.js"></script>
+<script src="jquery-ui/ui/jquery.ui.core.js"></script>
+<script src="jquery-ui/ui/jquery.ui.widget.js"></script>
+<script src="jquery-ui/ui/jquery.ui.button.js"></script>
+<script src="jquery-ui/ui/jquery.ui.spinner.js"></script>
+
 <script type="text/javascript">
 	
 	var gameGrid;
@@ -50,80 +61,119 @@ input {
 	
 	function registerEvents() {
 		gameGrid.on("canvasWidthChanged", function(newCanvasWidth) {
-			document.getElementById('canvasWidth').value = newCanvasWidth;
+			$("#canvasWidthSpinner").val(newCanvasWidth);
 		});
 		
 		gameGrid.on("canvasHeightChanged", function(newCanvasHeight) {
-			document.getElementById('canvasHeight').value = newCanvasHeight;
+			$("#canvasHeightSpinner").val(newCanvasHeight);
 		});
 		
 		gameGrid.on("gridColumnsChanged", function(newGridColumns) {
-			document.getElementById('gridColumns').value = newGridColumns;
+			$("#gridColumnSpinner").val(newGridColumns);
 		});
 		
 		gameGrid.on("gridRowsChanged", function(newGridRows) {
-			document.getElementById('gridRows').value = newGridRows;
+			$("#gridRowSpinner").val(newGridRows);
 		});		
 		
 		gameGrid.on("cellSizeChanged", function(newCellSize) {
-			document.getElementById('cellSize').value = newCellSize;
+			$("#cellSizeSpinner").val(newCellSize);
 		});
 		
 		gameGrid.on("lineWidthChanged", function(newLineWidth) {
-			document.getElementById('lineWidth').value = newLineWidth;
+			$("#lineWidthSpinner").val(newLineWidth);
 		});
 	}
 	
 	function getInititialValues() {
-		document.getElementById('minCanvasWidth').value = gameGrid.getMinCanvasWidth();
-		document.getElementById('canvasWidth').value = gameGrid.getCanvasWidth();
-		document.getElementById('maxCanvasWidth').value = gameGrid.getMaxCanvasWidth();
-		document.getElementById('minCanvasHeight').value = gameGrid.getMinCanvasHeight();
-		document.getElementById('canvasHeight').value = gameGrid.getCanvasHeight();
-		document.getElementById('maxCanvasHeight').value = gameGrid.getMaxCanvasHeight();
-		document.getElementById('minGridColumns').value = gameGrid.getMinGridColumns();
-		document.getElementById('gridColumns').value = gameGrid.getGridColumns();
-		document.getElementById('maxGridColumns').value = gameGrid.getMaxGridColumns();
-		document.getElementById('minGridRows').value = gameGrid.getMinGridRows();
-		document.getElementById('gridRows').value = gameGrid.getGridRows();
-		document.getElementById('maxGridRows').value = gameGrid.getMaxGridRows();
-		document.getElementById('minCellSize').value = gameGrid.getMinCellSize();
-		document.getElementById('cellSize').value = gameGrid.getCellSize();
-		document.getElementById('maxCellSize').value = gameGrid.getMaxCellSize();
-		document.getElementById('minLineWidth').value = gameGrid.getMinLineWidth();
-		document.getElementById('lineWidth').value = gameGrid.getLineWidth();
-		document.getElementById('maxLineWidth').value = gameGrid.getMaxLineWidth();
-		
+		$("#canvasWidthSpinner").val(gameGrid.getCanvasWidth());
+		$("#canvasHeightSpinner").val(gameGrid.getCanvasHeight());
+		$("#gridColumnSpinner").val(gameGrid.getGridColumns());
+		$("#gridRowSpinner").val(gameGrid.getGridRows());
+		$("#cellSizeSpinner").val(gameGrid.getCellSize());
+		$("#lineWidthSpinner").val(gameGrid.getLineWidth());
 		//document.getElementById('lineWidthFunction').value = gameGrid.getLineWidthFunction();
 		
-		document.getElementById('backgroundColorPicker').value = gameGrid.getBackgroundColor();
-		$("#backgroundOpacity").val(gameGrid.getBackgroundOpacity());
+		document.getElementById('minCanvasWidth').value = gameGrid.getMinCanvasWidth();
+		document.getElementById('maxCanvasWidth').value = gameGrid.getMaxCanvasWidth();
+		document.getElementById('minCanvasHeight').value = gameGrid.getMinCanvasHeight();
+		document.getElementById('maxCanvasHeight').value = gameGrid.getMaxCanvasHeight();
+		document.getElementById('minGridColumns').value = gameGrid.getMinGridColumns();
+		document.getElementById('maxGridColumns').value = gameGrid.getMaxGridColumns();
+		document.getElementById('minGridRows').value = gameGrid.getMinGridRows();
+		document.getElementById('maxGridRows').value = gameGrid.getMaxGridRows();
+		document.getElementById('minCellSize').value = gameGrid.getMinCellSize();
+		document.getElementById('maxCellSize').value = gameGrid.getMaxCellSize();
+		document.getElementById('minLineWidth').value = gameGrid.getMinLineWidth();		
+		document.getElementById('maxLineWidth').value = gameGrid.getMaxLineWidth();
+		
+		$("#backgroundColorPicker").val(gameGrid.getBackgroundColor());
+		$("#backgroundOpacityLabel").val(gameGrid.getBackgroundOpacity());
 		$("#backgroundOpacitySlider").slider( "option", "value", gameGrid.getBackgroundOpacity());
-		document.getElementById('lineColorPicker').value = gameGrid.getLineColor();
-		$("#lineOpacity").val(gameGrid.getLineOpacity());
+		$("#lineColorPicker").val(gameGrid.getLineColor());
+		$("#lineOpacityLabel").val(gameGrid.getLineOpacity());
 		$("#lineOpacitySlider").slider( "option", "value", gameGrid.getLineOpacity());
 	}
 	
 	//initialize accordion component from jquery-ui
 	$(function() {
-		$( "#accordion" ).accordion({autoHeight: false});
-		$( "#backgroundOpacitySlider" ).slider(
+		$("#accordion").accordion({
+			autoHeight: false
+		});
+		
+		$("#canvasWidthSpinner").spinner({
+			change: function() { 
+				gameGrid.changeCanvasWidth($("#canvasWidthSpinner").val(), getResizingOption()); 
+			}
+		});
+		
+		$("#canvasHeightSpinner").spinner({
+			change: function() { 
+				gameGrid.changeCanvasHeight($("#canvasHeightSpinner").val(), getResizingOption()); 
+			}
+		});
+		
+		$("#gridColumnSpinner").spinner({
+			change: function() { 
+				gameGrid.changeGridColumns($("#gridColumnSpinner").val(), getResizingOption()); 
+			}
+		});
+		
+		$("#gridRowSpinner").spinner({
+			change: function() { 
+				gameGrid.changeGridRows($("#gridRowSpinner").val(), getResizingOption()); 
+			}
+		});
+		
+		$("#cellSizeSpinner").spinner({
+			change: function() { 
+				gameGrid.changeCellSize($("#cellSizeSpinner").val(), getResizingOption()); 
+			}
+		});
+		
+		var lineWidthSpinner = $("#lineWidthSpinner").spinner(
+		);
+		
+		lineWidthSpinner.spinner( "disable" );
+		
+		$("#backgroundOpacitySlider").slider(
 			{value: 0,
 			min: 0,
 			max: 1,
 			step: 0.01,
 			slide: function( event, ui ) {
-				$( "#backgroundOpacity" ).val(ui.value);
+				$("#backgroundOpacityLabel").val(ui.value);
 				gameGrid.changeBackgroundOpacity(ui.value);
 			}
 		});
-		$( "#lineOpacitySlider" ).slider(
+		
+		$("#lineOpacitySlider").slider(
 			{value: 0,
 			min: 0,
 			max: 1,
 			step: 0.01,
 			slide: function( event, ui ) {
-				$( "#lineOpacity" ).val(ui.value);
+				$( "#lineOpacityLabel" ).val(ui.value);
 				gameGrid.changeLineOpacity(ui.value);
 			}
 		});
@@ -187,33 +237,28 @@ Resizing Options:
 <br>
 <table>
   <tr>
-    <td>Canvas Width:</td>
-    <td><input id="canvasWidth" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.changeCanvasWidth(document.getElementById('canvasWidth').value, getResizingOption());"></td>
+    <td><label for="canvasWidthSpinner">Canvas Width:</label></td>
+	<td><input id="canvasWidthSpinner" class="spinner"></td>
   </tr>
   <tr>
-    <td>Canvas Height:</td>
-    <td><input id="canvasHeight" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.changeCanvasHeight(document.getElementById('canvasHeight').value, getResizingOption());"></td>
+    <td><label for="canvasHeightSpinner">Canvas Height:</label></td>
+	<td><input id="canvasHeightSpinner" class="spinner"></td>
   </tr> 
   <tr>
-    <td>Grid Columns:</td>
-    <td><input id="gridColumns" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.changeGridColumns(document.getElementById('gridColumns').value, getResizingOption());"></td>
+    <td><label for="gridColumnSpinner">Grid Columns:</label></td>
+	<td><input id="gridColumnSpinner" class="spinner"></td>
   </tr>
   <tr>
-    <td>Grid Rows:</td>
-    <td><input id="gridRows" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.changeGridRows(document.getElementById('gridRows').value, getResizingOption());"></td>
+    <td><label for="gridRowSpinner">Grid Rows:</label></td>
+	<td><input id="gridRowSpinner" class="spinner"></td>
   </tr>
   <tr>
-    <td>Cell Size:</td>
-    <td><input id="cellSize" type="text" size="3"></td>
-    <td><input type="button" value="change" onClick="gameGrid.changeCellSize(document.getElementById('cellSize').value, getResizingOption());"></td>
+    <td><label for="cellSizeSpinner">Cell Size:</label></td>
+	<td><input id="cellSizeSpinner" class="spinner"></td>  
   </tr>  
   <tr>
-    <td>Line Width:</td>
-    <td><input id="lineWidth" type="text" size="3" disabled></td>
+    <td><label for="lineWidth">Line Width:</label></td>
+    <td><input id="lineWidthSpinner" class="spinner"></td>
   </tr>  
 </table>
 <br>
@@ -298,7 +343,7 @@ Current Line Width Function:<br>
   </tr>  
   <tr>
     <td>Background Opacity:</td>
-	<td><div id="backgroundOpacitySlider"></div><input type="text" id="backgroundOpacity" style="border:0"></td>
+	<td><div id="backgroundOpacitySlider"></div><input type="text" id="backgroundOpacityLabel" style="border:0"></td>
   </tr>
   <tr>
     <td>Line color:</td>
@@ -306,7 +351,7 @@ Current Line Width Function:<br>
   </tr>
   <tr>
     <td>Line Opacity:</td>
-	<td><div id="lineOpacitySlider"></div><input type="text" id="lineOpacity" style="border:0"></td>
+	<td><div id="lineOpacitySlider"></div><input type="text" id="lineOpacityLabel" style="border:0"></td>
   </tr>
 </table>
 

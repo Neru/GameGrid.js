@@ -63,9 +63,9 @@ function GameGrid(newCanvas) {
 	
 	var backgroundImage;
 	var backgroundColor = "#DDDDDD";
-	var backgroundOpacity = 0.5;
+	var backgroundOpacity = 0.6;
 	var lineColor = "#000000";
-	var lineOpacity = 0.75;
+	var lineOpacity = 0.70;
 	
 	var ee = new EventEmitter();
 
