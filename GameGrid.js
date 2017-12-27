@@ -155,7 +155,7 @@ function GameGrid(divID, options) {
 		return 1;
 	};
 
-	//TODO: var backgroundImage;
+	var backgroundImage; //TODO
 	var backgroundColor = "#DDDDDD";
 	var backgroundOpacity = 0.6;
 	var lineColor = "#000000";
@@ -588,6 +588,7 @@ function GameGrid(divID, options) {
 	};
 	
 	this.changeCanvasWidth = function (newCanvasWidth, option) {
+        newCanvasWidth = Number(newCanvasWidth);
 		minMaxCheck(minCanvasWidth, maxCanvasWidth, newCanvasWidth);
 	
 		switch(option) {
@@ -640,6 +641,7 @@ function GameGrid(divID, options) {
 	};
 		
 	this.changeCanvasHeight = function (newCanvasHeight, option) {
+        newCanvasHeight = Number(newCanvasHeight);
 		minMaxCheck(minCanvasHeight, maxCanvasHeight, newCanvasHeight);
 	
 		switch(option) {
@@ -674,6 +676,9 @@ function GameGrid(divID, options) {
 	};	
 		
 	this.changeCanvasSize = function (newCanvasWidth, newCanvasHeight, option) {
+        newCanvasWidth = Number(newCanvasWidth);
+        newCanvasHeight = Number(newCanvasHeight);
+
 		minMaxCheck(minCanvasWidth, maxCanvasWidth, newCanvasWidth);
 		minMaxCheck(minCanvasHeight, maxCanvasHeight, newCanvasHeight);
 	
@@ -738,6 +743,7 @@ function GameGrid(divID, options) {
 	};
 	
 	this.changeGridColumns = function (newGridColumns, option) {
+	    newGridColumns = Number(newGridColumns);
 		minMaxCheck(minGridColumns, maxGridColumns, newGridColumns);
 
 		switch(option) {
@@ -776,6 +782,7 @@ function GameGrid(divID, options) {
 	};	
 	
 	this.changeGridRows = function (newGridRows, option) {
+	    newGridRows = Number(newGridRows);
 		minMaxCheck(minGridRows, newGridRows, newGridRows);
 
 		switch(option) {
@@ -884,6 +891,7 @@ function GameGrid(divID, options) {
 	};
 	
 	this.changeCellSize = function (newCellSize, option) {
+        newCellSize = Number(newCellSize);
 		minMaxCheck(minCellSize, maxCellSize, newCellSize);
 		
 		var cellSizeForColumns;
@@ -971,6 +979,7 @@ function GameGrid(divID, options) {
 		}
 		
 		that.setCellSize(newCellSize);
+        repaint();
 	};
 	
 	this.changeBackgroundColor = function (newColor) {
