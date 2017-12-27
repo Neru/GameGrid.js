@@ -1,20 +1,19 @@
-GameGrid is an HTML5/Javascript based two-dimensional grid.
+GameGrid.js is an HTML5/Javascript based two-dimensional grid.
+
 It is highly scalable and configurable.
 It should serve as an API for grid-based games such as check or RPGs.
-
-License:
-Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) 
-(http://creativecommons.org/licenses/by-sa/3.0/)
-
 
 (Planned) Usage:
 <script type="text/javascript" src="GameGrid.js"></script>
 
 function init() {
-  var gameGrid = new GameGrid(canvas);
+  var gameGrid = new GameGrid("mygrid");
 }
 
 <body onload="init();">
-  <canvas id="canvas"></canvas>
+  <div id="mygrid"></div>
 </html>
 
+License:
+Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) 
+(http://creativecommons.org/licenses/by-sa/3.0/)

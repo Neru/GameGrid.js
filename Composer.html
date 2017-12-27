@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>  
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>GameGrid.js Composer</title>
+    <style type="text/css">
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0px;
+      font-size: 10px;
+      font-family: Verdana, Helvetica, sans-serif;
+    }
+
+    input {
+      font-size: 10px;
+    }
+
+    .spinner {
+      width: 50px;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>GameGrid.js Composer</h1>
+    <table>
+      <tr>
+        <td>
+          <div id="accordion">
+            <h3>Parameters</h3>  
+            <div> 
+              <div>Resizing Options:</div>
+              <form name="ResizingOptions">
+                <label>
+                  <input type="radio" name="resizingOption" class="resizingOption" value="canvasOnResize" checked />Dynamic Canvas Height and Width</label>
+                <br/>
+                <label>
+                  <input type="radio" name="resizingOption" class="resizingOption" value="gridOnResize"/>Dynamic Grid Columns and Rows</label>
+                <br/>
+                <label>
+                  <input type="radio" name="resizingOption" class="resizingOption" value="cellSizeOnResize"/>Dynamic Cell Size</label>
+                <br/>
+                <label>
+                  <input type="radio" name="resizingOption" class="resizingOption" value="none"/>None</label>
+                <br/>
+              </form>
+              <br/>
+              <table>
+                <tr>
+                  <td>
+                    <label for="canvasWidthSpinner">Canvas Width:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="canvasWidthSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="canvasHeightSpinner">Canvas Height:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="canvasHeightSpinner" class="spinner"/>
+                  </td>
+                </tr> 
+                <tr>
+                  <td>
+                    <label for="gridColumnsSpinner">Grid Columns:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="gridColumnsSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="gridRowsSpinner">Grid Rows:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="gridRowsSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="cellSizeSpinner">Cell Size:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="cellSizeSpinner" class="spinner"/>
+                  </td>  
+                </tr>  
+                <tr>
+                  <td>
+                    <label for="lineWidth">Line Width:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="lineWidthSpinner" class="spinner"/>
+                  </td>
+                </tr>  
+              </table>
+            </div>
+
+            <h3>Parameter Boundaries</h3>
+            <div>
+              <table>
+                <tr>
+                  <td>
+                    <label for="minCanvasWidthSpinner">Minimum Canvas Width:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="minCanvasWidthSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="maxCanvasWidthSpinner">Maximum Canvas Width:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="maxCanvasWidthSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="minCanvasHeightSpinner">Minimum Canvas Height:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="minCanvasHeightSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="maxCanvasHeightSpinner">Maximum Canvas Height:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="maxCanvasHeightSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="minGridColumnsSpinner">Minimum Grid Columns:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="minGridColumnsSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="maxGridColumnsSpinner">Maximum Grid Columns:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="maxGridColumnsSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="minGridRowsSpinner">Minimum Grid Rows:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="minGridRowsSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="maxGridRowsSpinner">Maximum Grid Rows:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="maxGridRowsSpinner" class="spinner"/>
+                  </td>
+                </tr>  
+                <tr>
+                  <td>
+                    <label for="minCellSizeSpinner">Minimum Cell Size:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="minCellSizeSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="maxCellSizeSpinner">Maximum Cell Size:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="maxCellSizeSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="minLineWidthSpinner">Minimum Line Width:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="minLineWidthSpinner" class="spinner"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="maxLineWidthSpinner">Maximum Line Width:</label>
+                  </td>
+                  <td>
+                    <input type="number" id="maxLineWidthSpinner" class="spinner"/>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <!-- Parameter boundaries -->
+            
+            <h3>Layout</h3>
+            <div>
+              <table>
+                <tr>
+                  <td>Background Color:</td>
+                  <td>
+                    <input type="color" id="backgroundColorPicker"/>
+                  </td>
+                </tr>  
+                <tr>
+                  <td>Background Opacity:</td>
+                  <td>
+                    <input type="range" min="0" max="1" step="0.01" class="slider" id="backgroundOpacitySlider"/>
+                    <input type="text" id="backgroundOpacityLabel" style="border:0"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Line color:</td>
+                  <td>
+                    <input type="color" id="lineColorPicker"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Line Opacity:</td>
+                  <td>
+                    <input type="range" min="0" max="1" step="0.01" class="slider" id="lineOpacitySlider"/>
+                    <input type="text" id="lineOpacityLabel" style="border:0"/>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <!-- Layout -->
+
+            <!-- Rest 
+    <h3><a href="#">Rest</a></h3>
+  <div>
+
+  Game To Grid Coordinatesystem Conversion Matrix:<br/>
+  <input id="matrix" type="text" size="30"><input type="button" value="change" onClick="gameGrid.changeMatrix(document.getElementById('matrix').value);"><br/>
+  <br/>
+  Add Image to Grid:<br/>
+  X Coordinate (in game): <input id="imageX" type="text" size="3"><br/>
+  Y Coordinate (in game): <input id="imageY" type="text" size="3"><br/>
+  URL: <input id="imageURL" type="text" size="20"><br/>
+  <input type="button" value="add" onClick="gameGrid.addImage(document.getElementById('imageX').value, document.getElementById('imageY').value, document.getElementById('imageURL').value);"><br/>
+  <br/>
+  Move Grid (relative):<br/>
+  X Coordinate: <input id="moveX" type="text" size="3"><br/>
+  Y Coordinate: <input id="moveY" type="text" size="3"><br/>
+  <input type="button" value="move" onClick="gameGrid.moveGrid(document.getElementById('moveX').value, document.getElementById('moveY').value);"><br/>
+  <br/>
+  Center Grid At:<br/>
+  X Coordinate: <input id="centerX" type="text" size="3"><br/>
+  Y Coordinate: <input id="centerY" type="text" size="3"><br/>
+  <input type="button" value="center" onClick="gameGrid.centerGrid(document.getElementById('centerX').value, document.getElementById('centerY').value);"><br/>
+  <br/>
+  <input type="button" value="Rotate Grid 90° (clockwise)" onClick="gameGrid.rotate90DegreesClockwise();"><br/>
+  <input type="button" value="Rotate Grid 90° (anti-clockwise)" onClick="gameGrid.rotate90DegreesAntiClockwise();"><br/>
+  <input type="button" value="Rotate Grid 180°" onClick="gameGrid.rotate180Degrees();"><br/>
+
+  </div> -->
+          </div>
+          <!-- accordion -->
+        </td>
+        <td>
+          <div id="grid" style="height:300px; width:400px"/>
+        </td>
+      </tr>
+    </table>
+
+    <script type="text/javascript" src="lib/gl-matrix.js"></script>
+    <script type="text/javascript" src="lib/EventEmitter.js"/></script>
+    <script type="text/javascript" src="GameGrid.js"/></script>
+    <script type="text/javascript">
+
+  function $(name) {
+    return document.querySelector(name);
+  }
+
+  var gameGrid = new GameGrid("grid");
+
+
+  for (let parameter of ["canvasWidth", "canvasHeight", "gridColumns", "gridRows", "cellSize", "lineWidth"]) {
+    let parameterSpinner = $("#" + parameter + "Spinner");
+    let Parameter = parameter.charAt(0).toUpperCase() + parameter.slice(1);
+
+    let minParameterSpinner = $("#min" + Parameter + "Spinner");
+    let maxParameterSpinner = $("#max" + Parameter + "Spinner");
+  
+    let parameterValue = gameGrid["get" + Parameter]();
+    parameterSpinner.value = parameterValue;
+    minParameterSpinner.max = parameterValue; 
+    maxParameterSpinner.min = parameterValue; 
+
+    parameterSpinner.addEventListener("input", function() {
+      var value = this.value;
+      gameGrid["change" + Parameter](value, getResizingOption()); 
+    
+      minParameterSpinner.max = value; 
+      maxParameterSpinner.min = value; 
+    });
+
+    gameGrid.on(parameter + "Changed", function(parameterValue) {
+      parameterSpinner.value = parameterValue;
+    
+      minParameterSpinner.max = parameterValue; 
+      maxParameterSpinner.min = parameterValue; 
+    });
+
+
+    let minParameterValue = gameGrid["getMin" + Parameter]();
+    minParameterSpinner.value = minParameterValue;
+
+    parameterSpinner.min = minParameterValue;
+
+    minParameterSpinner.addEventListener("input", function() {
+      var minValue = this.value;
+      gameGrid["setMin" + Parameter](minValue);
+
+      parameterSpinner.min = minValue;
+    });
+
+    let maxParameterValue = gameGrid["getMax" + Parameter]();
+    maxParameterSpinner.value = maxParameterValue;
+
+    parameterSpinner.max = maxParameterValue;
+
+    maxParameterSpinner.addEventListener("input", function() {
+      var maxValue = this.value;
+      gameGrid["setMax" + Parameter](maxValue);
+
+      parameterSpinner.max = maxValue;
+    });
+  }
+
+  for (let parameter of ["backgroundOpacity", "lineOpacity"]) {
+    let parameterSlider = $("#" + parameter + "Slider");
+    let parameterLabel = $("#" + parameter + "Label");
+    let Parameter = parameter.charAt(0).toUpperCase() + parameter.slice(1);
+
+    let parameterValue = gameGrid["get" + Parameter]();
+    parameterSlider.value = parameterValue;
+    parameterLabel.value = parameterValue;
+
+    parameterSlider.addEventListener("input", function() {
+      parameterLabel.value = this.value;
+      gameGrid["change" + Parameter](this.value);
+    });
+  }
+
+  for (let parameter of ["backgroundColor", "lineColor"]) {
+    let parameterSlider = $("#" + parameter + "Picker");
+    let Parameter = parameter.charAt(0).toUpperCase() + parameter.slice(1);
+
+    parameterSlider.value = gameGrid["get" + Parameter]();
+    parameterSlider.addEventListener("input", function() {
+      gameGrid["change" + Parameter](this.value);
+    });
+  }
+
+
+  function getResizingOption() {
+    var checkedResizingOption = $(".resizingOption:checked");
+    return checkedResizingOption.value;
+  }
+
+  function keyPressed(evt) {
+     var charCode = evt.which;
+     var charStr = String.fromCharCode(charCode);
+
+     switch (charStr) {
+       case "a":
+         var x = gameGrid.getGridColumns();
+         gameGrid.changeGridColumns(x + 1, getResizingOption());
+
+       break;
+     }
+  };
+
+       //MapGrid.drawMapObject(0, 1, "http://127.0.0.1:8020/RPG-API%20Client/WebContent/Door.png");
+
+    // MapGrid.addClickedGridCellListener(function(point) {
+      // MapGrid.changeCellSize(25, "gridOnResize");
+    // });
+    window.onkeypress = keyPressed;
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+<html>  
+  <head>
+    <title>Hello World</title>
+    <script type="text/javascript" src="../GameGrid.js"></script>
+    <script type="text/javascript" src="../lib/EventEmitter.js"></script>
+    <script type="text/javascript" src="../lib/gl-matrix.js"></script>
+    <script type="text/javascript">
+      function init() {    
+        new GameGrid("mygrid");
+      }  
+    </script>
+  </head>
+  <body onload="init();">
+    <div id="mygrid"></div>
+  </body>
+</html>
