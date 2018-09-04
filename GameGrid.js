@@ -1,6 +1,8 @@
 /**
+ * GameGrid.js
+ * (c) by Neru, 2011-2018
+ *
  * TODO:
- * check changeCanvasHeight cellSizeOnResize & changeCellSize
  * lineWidth Function?
  * weights (^1/2) for changeCanvasSize
  * image and geo coordinate system
@@ -14,10 +16,6 @@
  * adjustable alignment of grid in canvas (center, left, right)
  * image (stretched, fitted, side-by-side), like desktop background in Windows
  * SpatialLite Database
- */
-
-/**
- * (c) by Neru, 2011-2012
  */
  
 RESIZING_TIMEOUT = 500; //milliseconds
@@ -599,31 +597,28 @@ function GameGrid(divID, options) {
 			that.setGridColumns(newGridColumns);
 			break;
 		case "cellSizeOnResize":	
-			if (canvasWidth < canvasHeight && newCanvasWidth > canvasHeight) {
-				var newCellSize = Math.floor(((canvasHeight - lineWidth) / gridColumns) - lineWidth);
+			var normalizedCanvasWidth = (newCanvasWidth - lineWidth) / gridColumns;
+			var normalizedCanvasHeight = (canvasHeight - lineWidth) / gridRows;
+		
+			if (normalizedCanvasWidth < normalizedCanvasHeight) {
+				var newCellSize = Math.floor(normalizedCanvasWidth - lineWidth);
 				
-				if (newCellSize > maxCellSize) {
-					newCellSize = maxCellSize;
-				}
-				that.setCellSize(newCellSize);
-			} else if (canvasWidth > canvasHeight && newCanvasWidth < canvasHeight) {
-				var newCellSize = Math.floor(((canvasHeight - lineWidth) / gridColumns) - lineWidth);
-				
-				if (newCellSize < minCellSize) {
-					newCellSize = minCellSize;
-					newCanvasWidth = gridColumns * (minCellSize + lineWidth) + lineWidth;
-				}
-				that.setCellSize(newCellSize);
-			} else if (newCanvasWidth <= canvasHeight) {
-				var newCellSize = Math.floor(((newCanvasWidth - lineWidth) / gridColumns) - lineWidth);
 				if (newCellSize < minCellSize) {
 					newCellSize = minCellSize;
 					newCanvasWidth = gridColumns * (minCellSize + lineWidth) + lineWidth;
 				} else if (newCellSize > maxCellSize) {
 					newCellSize = maxCellSize;
 				} 
-				that.setCellSize(newCellSize);
-			} 
+			} else {
+				var newCellSize = Math.floor(normalizedCanvasHeight - lineWidth);
+				
+				if (newCellSize < minCellSize) {
+					newCellSize = minCellSize;
+				} else if (newCellSize > maxCellSize) {
+					newCellSize = maxCellSize;
+				} 	
+			}
+			that.setCellSize(newCellSize);
 			break;
 		default:
 			if (newCanvasWidth < that.getGridWidth()) {
@@ -652,13 +647,27 @@ function GameGrid(divID, options) {
 			that.setGridRows(newGridRows);
 			break;
 		case "cellSizeOnResize":
-			var newCellSize = Math.floor(((newCanvasHeight - lineWidth) / gridRows) - lineWidth);
-			if (newCellSize < minCellSize) {
-				newCellSize = minCellSize;
-				newCanvasHeight = gridRows * (minCellSize + lineWidth) + lineWidth;
-			} else if(newCellSize > maxCellSize) {
-				newCellSize = maxCellSize;
-			} 
+			var normalizedCanvasWidth = (canvasWidth - lineWidth) / gridColumns;
+			var normalizedCanvasHeight = (newCanvasHeight - lineWidth) / gridRows;
+		
+			if (normalizedCanvasWidth < normalizedCanvasHeight) {
+				var newCellSize = Math.floor(normalizedCanvasWidth - lineWidth);
+				
+				if (newCellSize < minCellSize) {
+					newCellSize = minCellSize;
+				} else if (newCellSize > maxCellSize) {
+					newCellSize = maxCellSize;
+				} 
+			} else {
+				var newCellSize = Math.floor(normalizedCanvasHeight - lineWidth);
+				
+				if (newCellSize < minCellSize) {
+					newCellSize = minCellSize;
+					newCanvasHeight = gridRows * (minCellSize + lineWidth) + lineWidth;
+				} else if (newCellSize > maxCellSize) {
+					newCellSize = maxCellSize;
+				} 	
+			}
 			that.setCellSize(newCellSize);
 			break;
 		default:
@@ -701,27 +710,29 @@ function GameGrid(divID, options) {
 			that.setGridRows(newGridRows);
 			break;
 		case "cellSizeOnResize":
-			var cellSizeForColumns = Math.floor(((newCanvasWidth - lineWidth) / gridColumns) - lineWidth);
-			if(cellSizeForColumns < minCellSize) {
-				cellSizeForColumns = minCellSize;
-				newCanvasWidth = gridColumns * (minCellSize + lineWidth) + lineWidth;
-			} else if(cellSizeForColumns > maxCellSize) {
-				cellSizeForColumns = maxCellSize;
-			} 
-			
-			var cellSizeForRows = Math.floor(((newCanvasHeight - lineWidth) / gridRows) - lineWidth);
-			if (cellSizeForRows < minCellSize) {
-				cellSizeForRows = minCellSize;
-				newCanvasHeight = gridRows * (minCellSize + lineWidth) + lineWidth;
-			} else if (cellSizeForRows > maxCellSize) {
-				cellSizeForRows = maxCellSize;
-			} 
-			
-			if (cellSizeForColumns < cellSizeForRows) {
-				that.setCellSize(cellSizeForColumns);
+			var normalizedCanvasWidth = (newCanvasWidth - lineWidth) / gridColumns;
+			var normalizedCanvasHeight = (newCanvasHeight - lineWidth) / gridRows;
+		
+			if (normalizedCanvasWidth < normalizedCanvasHeight) {
+				var newCellSize = Math.floor(normalizedCanvasWidth - lineWidth);
+				
+				if (newCellSize < minCellSize) {
+					newCellSize = minCellSize;
+					newCanvasWidth = gridColumns * (minCellSize + lineWidth) + lineWidth;
+				} else if (newCellSize > maxCellSize) {
+					newCellSize = maxCellSize;
+				} 
 			} else {
-				that.setCellSize(cellSizeForRows);
+				var newCellSize = Math.floor(normalizedCanvasHeight - lineWidth);
+				
+				if (newCellSize < minCellSize) {
+					newCellSize = minCellSize;
+					newCanvasHeight = gridRows * (minCellSize + lineWidth) + lineWidth;
+				} else if (newCellSize > maxCellSize) {
+					newCellSize = maxCellSize;
+				} 	
 			}
+			that.setCellSize(newCellSize);
 			break;
 		default:
 			if (newCanvasWidth < that.getGridWidth()) {
@@ -754,14 +765,27 @@ function GameGrid(divID, options) {
 			that.setCanvasWidth(newCanvasWidth);
 			break;
 		case "cellSizeOnResize":		
-			var newCellSize = Math.floor(((canvasWidth - lineWidth) / newGridColumns) - lineWidth);
-			
-			if (newCellSize < minCellSize) {
-				newCellSize = minCellSize;
-				newGridColumns = Math.floor((canvasWidth - lineWidth) / (minCellSize + lineWidth));
-			} else if (newCellSize > maxCellSize) {
-				newCellSize = maxCellSize;
-			}	
+			var normalizedCanvasWidth = (canvasWidth - lineWidth) / newGridColumns;
+			var normalizedCanvasHeight = (canvasHeight - lineWidth) / gridRows;
+		
+			if (normalizedCanvasWidth < normalizedCanvasHeight) {
+				var newCellSize = Math.floor(normalizedCanvasWidth - lineWidth);
+				
+				if (newCellSize < minCellSize) {
+					newCellSize = minCellSize;
+					newGridColumns = Math.floor((canvasWidth - lineWidth) / (minCellSize + lineWidth));
+				} else if (newCellSize > maxCellSize) {
+					newCellSize = maxCellSize;
+				} 
+			} else {
+				var newCellSize = Math.floor(normalizedCanvasHeight - lineWidth);
+				
+				if (newCellSize < minCellSize) {
+					newCellSize = minCellSize;
+				} else if (newCellSize > maxCellSize) {
+					newCellSize = maxCellSize;
+				} 	
+			}
 			that.setCellSize(newCellSize);
 			break;
 		default:
@@ -794,21 +818,34 @@ function GameGrid(divID, options) {
 			that.setCanvasHeight(newCanvasHeight);
 			break;
 		case "cellSizeOnResize":		
-			var newCellSize = Math.floor(((canvasHeight - lineWidth) / newGridRows) - lineWidth);
-			
-			if (newCellSize < minCellSize) {
-				newCellSize = minCellSize;
-				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellSize + lineWidth));
-			} else if (newCellSize > maxCellSize) {
-				newCellSize = maxCellSize;
-			}	
+			var normalizedCanvasWidth = (canvasWidth - lineWidth) / gridColumns;
+			var normalizedCanvasHeight = (canvasHeight - lineWidth) / newGridRows;
+		
+			if (normalizedCanvasWidth < normalizedCanvasHeight) {
+				var newCellSize = Math.floor(normalizedCanvasWidth - lineWidth);
+				
+				if (newCellSize < minCellSize) {
+					newCellSize = minCellSize;
+				} else if (newCellSize > maxCellSize) {
+					newCellSize = maxCellSize;
+				} 
+			} else {
+				var newCellSize = Math.floor(normalizedCanvasHeight - lineWidth);
+				
+				if (newCellSize < minCellSize) {
+					newCellSize = minCellSize;
+					newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellSize + lineWidth));
+				} else if (newCellSize > maxCellSize) {
+					newCellSize = maxCellSize;
+				} 	
+			}
 			that.setCellSize(newCellSize);
 			break;
 		default:
 			var newGridHeight = newGridRows * (lineWidth + cellSize) + lineWidth;
 
 			if (newGridHeight > canvasHeight) {
-				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellSize + lineWidth));
+				newGridRows = Math.floor((canvasHeight - lineWidth) / (cellSize + lineWidth));
 			}
 		}
 		
@@ -844,28 +881,29 @@ function GameGrid(divID, options) {
 			that.setCanvasHeight(newCanvasHeight);
 			break;
 		case "cellSizeOnResize":
-			var cellSizeForColumns = Math.floor(((canvasWidth - lineWidth) / newGridColumns) - lineWidth);
-			
-			if (cellSizeForColumns < minCellSize) {
-				cellSizeForColumns = minCellSize;
-				newGridColumns = Math.floor((canvasWidth - lineWidth) / (minCellSize + lineWidth));
-			} else if (cellSizeForColumns > maxCellSize) {
-				cellSizeForColumns = maxCellSize;
-			}
-			var cellSizeForRows = Math.floor(((canvasHeight - lineWidth) / newGridRows) - lineWidth);
-			
-			if (cellSizeForRows < minCellSize) {
-				cellSizeForRows = minCellSize;
-				newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellSize + lineWidth));
-			} else if (cellSizeForRows > maxCellSize) {
-				cellSizeForRows = maxCellSize;
-			}
-			
-			if (cellSizeForColumns < cellSizeForRows) {
-				that.setCellSize(cellSizeForColumns);
+			var normalizedCanvasWidth = (canvasWidth - lineWidth) / newGridColumns;
+			var normalizedCanvasHeight = (canvasHeight - lineWidth) / newGridRows;
+		
+			if (normalizedCanvasWidth < normalizedCanvasHeight) {
+				var newCellSize = Math.floor(normalizedCanvasWidth - lineWidth);
+				
+				if (newCellSize < minCellSize) {
+					newCellSize = minCellSize;
+					newGridColumns = Math.floor((canvasWidth - lineWidth) / (minCellSize + lineWidth));
+				} else if (newCellSize > maxCellSize) {
+					newCellSize = maxCellSize;
+				} 
 			} else {
-				that.setCellSize(cellSizeForRows);
+				var newCellSize = Math.floor(normalizedCanvasHeight - lineWidth);
+				
+				if (newCellSize < minCellSize) {
+					newCellSize = minCellSize;
+					newGridRows = Math.floor((canvasHeight - lineWidth) / (minCellSize + lineWidth));
+				} else if (newCellSize > maxCellSize) {
+					newCellSize = maxCellSize;
+				} 	
 			}
+			that.setCellSize(newCellSize);
 			break;
 		default:
 			var newGridWidth = newGridColumns * (lineWidth + cellSize) + lineWidth;
