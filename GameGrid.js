@@ -154,25 +154,35 @@ function GameGrid(divID, options) {
 	var backgroundOpacity = 0.6;
 	var lineColor = "#000000";
 	var lineOpacity = 0.70;
+	var TO_RADIANS = Math.PI/180; 
 
 	var gridCellClicked;
 	var cellSizeChanged;
 	
-	var gridImages = [];
+	var gridImages = {};
 	var matrix = mat4.create();
 	mat4.identity(matrix);
 
 
-	var drawGridImage = function (xCoord, yCoord, imageURL) {
-		var img = new Image();
+	var drawGridImage = async function (xCoord, yCoord, gridImage) {
 		var dx = that.getXShift() + lineWidth + xCoord * (cellSize + lineWidth);
 		var dy = that.getYShift() + lineWidth + yCoord * (cellSize + lineWidth);
 		var dw = cellSize;
 
-		img.onload = function() {
-			context.drawImage(img, dx, dy, dw, dw);
-		};
-		img.src = imageURL;
+		return new Promise(function(resolve, reject) {
+			var img = new Image();
+			img.onload = function() {
+				//source: https://gamedev.stackexchange.com/questions/67274/is-it-possible-to-rotate-an-image-on-an-html5-canvas-without-rotating-the-whole
+				context.save(); 
+				context.translate(dx + dw/2, dy + dw/2);
+				context.rotate(gridImage["angle"] * TO_RADIANS);
+				context.drawImage(img, -dw/2, -dw/2, dw, dw);
+				context.restore(); 
+				resolve(img);
+			}
+			img.onerror = reject;
+			img.src = gridImage["url"];
+		});	
 	};
 	
 	var drawBackgroundColor = function () {
@@ -194,7 +204,7 @@ function GameGrid(divID, options) {
 		
 	var drawBackground = drawBackgroundColor;
 
-	var repaint = function() {
+	var repaint = async function() {
 		var xShift = that.getXShift();
 		var yShift = that.getYShift();
 		var gridWidth = that.getGridWidth();
@@ -227,17 +237,22 @@ function GameGrid(divID, options) {
 		context.stroke();
 		
 		//draw images for each grid cell
-		/*
+
+		var imagesToDraw = [];
+		var gridImage, imageToDraw;
+		
 		for (j = 0; j <= gridRows; j++) {
 			for (i = 0; i <= gridColumns; i++) {
 				//matrix multiplication
-				var imageURL = that.getGridImage(i, j);
-				if (imageURL !== null) {
-					drawGridImage(i, j, imageURL);
+				gridImage = that.getGridImage(i, j);
+				if (gridImage !== undefined) {
+					imageToDraw = drawGridImage(i, j, gridImage);
+					imagesToDraw.push(imageToDraw);
 				}
 			}
 		}
-		*/
+		
+		return Promise.all(imagesToDraw);
 	};
 	
 	var minMaxCheck = function (min, max, newValue) {
@@ -1160,19 +1175,46 @@ function GameGrid(divID, options) {
 		repaint();
 	};
 	
-	this.addGridImage = function (xCoord, yCoord, imageURL) {
-		if (xCoord < 0 || xCoord > gridColumns || yCoord < 0 || yCoord > gridRows) {
-			throw "The image lies outside the grid.";
+	this.addGridImage = async function (xCoord, yCoord, imageURL, angle = 0) {
+		gridImages[xCoord] = gridImages[xCoord] ? gridImages[xCoord] : {};
+		gridImages[xCoord][yCoord] = {
+			"url": imageURL,
+			"angle": angle
+		};
+		
+		return repaint();
+	};
+	
+	this.rotateGridImage = async function (xCoord, yCoord, angle) {
+		var gridImage = that.getGridImage(xCoord, yCoord);
+		gridImage["angle"] = angle;
+		
+		return repaint();
+	};
+	
+	this.moveGridImage = async function (oldXCoord, oldYCoord, xCoord, yCoord) {
+		var gridImage = that.getGridImage(oldXCoord, oldYCoord);
+		that.removeGridImage(oldXCoord, oldYCoord);
+		that.addGridImage(xCoord, yCoord, gridImage["url"], gridImage["angle"]);
+		
+		return repaint();
+	};
+	
+	this.getGridImage = function (xCoord, yCoord) {
+		return gridImages[xCoord] && gridImages[xCoord][yCoord];
+	};
+	
+	this.removeGridImage = async function (xCoord, yCoord) {
+		if (gridImages[xCoord] === undefined || gridImages[xCoord][yCoord] === undefined) {
+			throw "An image does not exist at this position.";
 		}
-		gridImages[xCoord][yCoord] = imageURL;
-	};
-	
-	this.getImageOnGrid = function (xCoord, yCoord) {
-		return gridImages[xCoord][yCoord];
-	};
-	
-	this.removeGridImage = function (xCoord, yCoord) {
-		gridImages[xCoord][yCoord] = null;
+		
+		delete gridImages[xCoord][yCoord];
+		
+		if (Object.keys(gridImages[xCoord]).length === 0)
+			delete gridImages[xCoord];
+		
+		return repaint();
 	};
 	
 	this.moveGrid = function (x, y) {
@@ -1271,8 +1313,9 @@ function GameGrid(divID, options) {
 		eventEmitter.emit("gridCoordinateClicked", gridCoordinate);
 		var gameCoordinate = getGameCoordinate(gridCoordinate);
 		eventEmitter.emit("gameCoordinateClicked", gameCoordinate);
-		var url = that.getImageOnGrid(gridCoordinate.x, gridCoordinate.y);
-		eventEmitter.emit("imageClicked", url);
+		var url = that.getGridImage(gridCoordinate.x, gridCoordinate.y);
+		if (url)
+			eventEmitter.emit("imageClicked", url);
 	}
 		
 	canvas.addEventListener("mousedown", canvasClicked);

@@ -1,0 +1,28 @@
+<html>  
+  <head>
+    <title>Add (and remove) SVG</title>
+    <script type="text/javascript" src="../GameGrid.js"></script>
+    <script type="text/javascript" src="../lib/EventEmitter.js"></script>
+    <script type="text/javascript" src="../lib/gl-matrix.js"></script>
+    <script type="text/javascript">
+      async function init() {    
+        var gameGrid = new GameGrid("mygrid");
+		await gameGrid.addGridImage(2, 1, "../res/triangle.svg");
+		
+		console.log(gameGrid.getGridImage(2, 1));
+		
+		await gameGrid.rotateGridImage(2, 1, -90);
+		
+		console.log(gameGrid.getGridImage(2, 1));
+		
+		await gameGrid.moveGridImage(2, 1, 3, 1);
+		
+		console.log(gameGrid.getGridImage(2, 2));
+		//gameGrid.removeGridImage(2, 1);
+      }
+    </script>
+  </head>
+  <body onload="init();">
+    <div id="mygrid"></div>
+  </body>
+</html>
