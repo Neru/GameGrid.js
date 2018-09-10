@@ -20,8 +20,7 @@
  
 RESIZING_TIMEOUT = 500; //milliseconds
  
-function GameGrid(divID, options) {
-
+function GameGrid(divID, options = {}) {
 	var div = document.getElementById(divID);
 	
 	if (!div)
@@ -31,69 +30,18 @@ function GameGrid(divID, options) {
 		throw "Element with ID '" + divID + "' is not an HTML Div.";
 	}
 	
-	var cssText = div.style.cssText;
-	if (cssText != "") {
-		var cssAttributes = cssText.split(";");
-		
-		var cssAttribute, keyValue, value;
-		var divWidth, divHeight;
-		for (var i in cssAttributes) {
-			cssAttribute = cssAttributes[i];
-			keyValue = cssAttribute.split(":");
-			key = keyValue[0].trim();
-			
-			if (keyValue[1])
-				value = keyValue[1].trim();
-					
-			switch (key) {
-				case "width":
-				divWidth = value;
-				break;
-			
-				case "height": 
-				divHeight = value;
-				break;
-			}
-		}
-	}
-	
-	
-	if (divWidth == undefined) {
-		divWidth = "100%";
-		div.style.width = divWidth;
-	}
-	if (divHeight == undefined) {
-		divHeight = "100%";
-		div.style.height = divHeight;;
-	}
-	
-	var initialDivWidth = div.clientWidth;
-	var initialDivHeight = div.clientHeight;
-	var initialWindowWidth = window.innerWidth;
-	var initialWindowHeight = window.innerHeight;		
+	var divWidth = div.clientWidth;
+	var divHeight = div.clientHeight;
+	var windowWidth = window.innerWidth;
+	var windowHeight = window.innerHeight;
 	
 	var windowHasBeenJustResized = false;
-	var oldWindowWidth, oldWindowHeight;
 	
 	function windowResized() {		
 		if (windowHasBeenJustResized)
 			return;
-			
-		var newWindowWidth = window.innerWidth;
-		var newWindowHeight = window.innerHeight;
 		
-		resizeDiv(newWindowWidth, newWindowHeight);
-	}
-	
-	function resizeDiv(newWindowWidth, newWindowHeight) {
-		var newDivWidth = newWindowWidth / initialWindowWidth * initialDivWidth;
-		var newDivHeight = newWindowHeight / initialWindowHeight * initialDivHeight;
-		
-		windowHasBeenJustResized = true;
-		oldWindowWidth = newWindowWidth;
-		oldWindowHeight = newWindowHeight;
-		
-		window.setTimeout("resizingTimeoutOver()", RESIZING_TIMEOUT);
+		window.setTimeout(resizingTimeoutOver, RESIZING_TIMEOUT);
 	}
 	
 	function resizingTimeoutOver() {
@@ -102,24 +50,32 @@ function GameGrid(divID, options) {
 		var newWindowWidth = window.innerWidth;
 		var newWindowHeight = window.innerHeight;
 		
-		if (newWindowWidth == oldWindowWidth && newWindowHeight == oldWindowHeight)
+		if (newWindowWidth === windowWidth && newWindowHeight === windowHeight)
 			return;
-			
-		resizeDiv(newWindowWidth, newWindowHeight);
-	}
-	
-	if (divWidth.indexOf("%") != -1 || divHeight.indexOf("%") != -1) {
-		window.onresize = windowResized;
-	}
-	
-	var canvas = document.createElement("canvas");
-	canvas.setAttribute("width", initialDivWidth);
-	canvas.setAttribute("height", initialDivHeight);
-	div.appendChild(canvas);
 		
+		windowWidth = newWindowWidth;
+		windowHeight = newWindowHeight;
+			
+		divWidth = div.clientWidth;
+		divHeight = div.clientHeight;
+		
+		that.changeCanvasSize(divWidth, divHeight, "gridOnResize");		
+		windowHasBeenJustResized = true;
+		
+		window.setTimeout(resizingTimeoutOver, RESIZING_TIMEOUT);
+	}
+	
+			
 	var that = this;
 	
-	var context = canvas.getContext('2d');
+	var Renderer = options["renderer"] || CanvasRenderer;
+	
+	var renderer = new Renderer({
+		width: divWidth,
+		height: divHeight
+	});
+		
+	div.appendChild(renderer.element);
 		
 	var eventEmitter = new EventEmitter();
 	
@@ -149,12 +105,15 @@ function GameGrid(divID, options) {
 	var lineWidth = 1;
 	var maxLineWidth = 10;
 
-	var backgroundImage; //TODO
-	var backgroundColor = "#DDDDDD";
-	var backgroundOpacity = 0.6;
+	var drawBackground = renderer.drawBackgroundColor;
+	var background = {
+		color: "#DDDDDD",
+		opacity: 0.6,
+		url: null
+	};
+	
 	var lineColor = "#000000";
 	var lineOpacity = 0.70;
-	var TO_RADIANS = Math.PI/180; 
 
 	var gridCellClicked;
 	var cellSizeChanged;
@@ -163,90 +122,37 @@ function GameGrid(divID, options) {
 	var matrix = mat4.create();
 	mat4.identity(matrix);
 
-
-	var drawGridImage = async function (xCoord, yCoord, gridImage) {
-		var dx = that.getXShift() + lineWidth + xCoord * (cellSize + lineWidth);
-		var dy = that.getYShift() + lineWidth + yCoord * (cellSize + lineWidth);
-		var dw = cellSize;
-
-		return new Promise(function(resolve, reject) {
-			var img = new Image();
-			img.onload = function() {
-				//source: https://gamedev.stackexchange.com/questions/67274/is-it-possible-to-rotate-an-image-on-an-html5-canvas-without-rotating-the-whole
-				context.save(); 
-				context.translate(dx + dw/2, dy + dw/2);
-				context.rotate(gridImage["angle"] * TO_RADIANS);
-				context.drawImage(img, -dw/2, -dw/2, dw, dw);
-				context.restore(); 
-				resolve(img);
-			}
-			img.onerror = reject;
-			img.src = gridImage["url"];
-		});	
-	};
 	
-	var drawBackgroundColor = function () {
-		context.fillStyle = "#FFFFFF";
-		context.globalAlpha = 1;
-		context.fillRect(0, 0, canvasWidth, canvasHeight);
-		context.fillStyle = backgroundColor;
-		context.globalAlpha = backgroundOpacity;
-		context.fillRect(0, 0, canvasWidth, canvasHeight);
-	};
-	
-	var drawBackgroundImage = function () {
-		var img = Image();
-		img.onload = function() {
-			context.drawImage(img, 0, 0, canvasWidth, canvasHeight);
-		};
-		img.src = backgroundImage;
-	};
-		
-	var drawBackground = drawBackgroundColor;
-
 	var repaint = async function() {
 		var xShift = that.getXShift();
 		var yShift = that.getYShift();
 		var gridWidth = that.getGridWidth();
 		var gridHeight = that.getGridHeight();
+		var gridColums = that.getGridColumns();
+		var gridRows = that.getGridRows();
 			
 		//draw either background image or color
-		drawBackground(); 
+		//use apply (otherwise this is undefined inside the function)
+		drawBackground.apply(renderer, [canvasWidth, canvasHeight, background]); 
 
 		if (lineWidth === 0)
 		    return;
 
-		context.strokeStyle = lineColor;
-		context.globalAlpha = lineOpacity;
-		context.beginPath();
-		// vertical lines:
-		// | | | |
-		// | | | |
-		for (var i = 0; i <= gridColumns; i++) {
-			context.moveTo(xShift + (lineWidth / 2) + i * (cellSize + lineWidth), yShift);
-			context.lineTo(xShift + (lineWidth / 2) + i * (cellSize + lineWidth), yShift + gridHeight);
-		}
-		// horizontal lines:
-		//  _ _ _
-		//  _ _ _
-		//  _ _ _
-		for (var j = 0; j <= gridRows; j++) {
-			context.moveTo(xShift, yShift + (lineWidth / 2) + j * (cellSize + lineWidth));
-			context.lineTo(xShift + gridWidth, yShift + (lineWidth / 2) + j * (cellSize + lineWidth));
-		}
-		context.stroke();
+		renderer.drawGrid(xShift, yShift, gridWidth, gridHeight, gridColums, gridRows, cellSize, lineWidth, lineColor, lineOpacity);
 		
 		//draw images for each grid cell
-
 		var imagesToDraw = [];
-		var gridImage, imageToDraw;
+		var gridImage, imageToDraw, imageX, imageY;
 		
-		for (j = 0; j <= gridRows; j++) {
-			for (i = 0; i <= gridColumns; i++) {
+		for (var yCoord = 0; yCoord <= gridRows; yCoord++) {
+			for (var xCoord = 0; xCoord <= gridColumns; xCoord++) {
 				//matrix multiplication
-				gridImage = that.getGridImage(i, j);
+				gridImage = that.getGridImage(xCoord, yCoord);
 				if (gridImage !== undefined) {
-					imageToDraw = drawGridImage(i, j, gridImage);
+					imageX = xShift + lineWidth + xCoord * (cellSize + lineWidth);
+					imageY = yShift + lineWidth + yCoord * (cellSize + lineWidth);
+
+					imageToDraw = renderer.drawGridImage(imageX, imageY, cellSize, gridImage);
 					imagesToDraw.push(imageToDraw);
 				}
 			}
@@ -262,24 +168,7 @@ function GameGrid(divID, options) {
 			throw "New Value too large.";			
 		}
 	};
-	
-	//from http://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element
-	var getClickedPointOnCanvas = function(e) {
-		var x;
-		var y;
-		if (e.pageX !== undefined && e.pageY !== undefined) {
-			x = e.pageX;
-			y = e.pageY;
-		} else {
-			x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-			y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-		}
-		//offset of the canvas
-		x -= canvas.offsetLeft;
-		y -= canvas.offsetTop;
 
-		return {x: x, y: y};
-	};
 
 	/**
 	 * When the point lies outside the grid or on a grid line,
@@ -421,11 +310,15 @@ function GameGrid(divID, options) {
 	};
 	
 	this.getBackgroundColor = function() {
-		return backgroundColor;
+		return background.color;
 	};
 	
 	this.getBackgroundOpacity = function() {
-		return backgroundOpacity;
+		return background.opacity;
+	};
+	
+	this.getBackgroundUrl = function() {
+		return background.url;
 	};
 	
 	var Parameter = function (name, getMin, getValue, getMax) {
@@ -478,7 +371,7 @@ function GameGrid(divID, options) {
 	this.setCanvasWidth = function (newCanvasWidth) {
 		canvasWidthObject.checkNewValue(newCanvasWidth);
 		canvasWidth = newCanvasWidth;
-		canvas.width = newCanvasWidth;
+		renderer.element.setAttribute("width", newCanvasWidth);
 	};
 	
 	this.setMaxCanvasWidth = function (newMaxCanvasWidth) {
@@ -495,8 +388,8 @@ function GameGrid(divID, options) {
 		
 	this.setCanvasHeight = function (newCanvasHeight) {
 		canvasHeightObject.checkNewValue(newCanvasHeight);
-		canvas.height = newCanvasHeight;
 		canvasHeight = newCanvasHeight;
+		renderer.element.setAttribute("height", newCanvasHeight);
 	};
 	
 	this.setMaxCanvasHeight = function (newMaxCanvasHeight) {
@@ -565,7 +458,6 @@ function GameGrid(divID, options) {
 	this.setLineWidth = function (newLineWidth) {
 		lineWidthObject.checkNewValue(newLineWidth);
 		lineWidth = newLineWidth;
-		context.lineWidth = newLineWidth;
 	};	
 	
 	this.setMaxLineWidth = function (newMaxLineWidth) {
@@ -583,16 +475,17 @@ function GameGrid(divID, options) {
 	};
 	
 	this.setBackgroundColor = function (newBackgroundColor) {
-		backgroundColor = newBackgroundColor;
+		background.color = newBackgroundColor;
+		drawBackground = renderer.drawBackgroundColor;
 	};
 	
 	this.setBackgroundOpacity = function (newBackgroundOpacity) {
-		backgroundOpacity = newBackgroundOpacity;
+		background.opacity = newBackgroundOpacity;
 	};
 	
 	this.setBackgroundImage = function (imageURL) {
-		backgroundImage = imageURL;
-		drawBackground = drawBackgroundImage;
+		background.url = imageURL;
+		drawBackground = renderer.drawBackgroundImage;
 	};
 	
 	this.changeCanvasWidth = function (newCanvasWidth, option) {
@@ -1195,7 +1088,7 @@ function GameGrid(divID, options) {
 	this.moveGridImage = async function (oldXCoord, oldYCoord, xCoord, yCoord) {
 		var gridImage = that.getGridImage(oldXCoord, oldYCoord);
 		that.removeGridImage(oldXCoord, oldYCoord);
-		that.addGridImage(xCoord, yCoord, gridImage["url"], gridImage["angle"]);
+		that.addGridImage(xCoord, yCoord, gridImage.url, gridImage.angle);
 		
 		return repaint();
 	};
@@ -1285,15 +1178,9 @@ function GameGrid(divID, options) {
 	this.removeEventListener = function (eventName, callback) {
 		eventEmitter.removeEventListener(eventName, callback);
 	};
-	
-	//TODO
-	context.lineWidth = 1;
 
-	var widthFactor = Math.sqrt(canvasWidth / canvas.width);
-	var heightFactor = Math.sqrt(canvasHeight / canvas.height);
-	
-	canvasWidth = canvas.width;
-	canvasHeight = canvas.height;
+	var widthFactor = Math.sqrt(canvasWidth / divWidth);
+	var heightFactor = Math.sqrt(canvasHeight / divHeight);
 	
 	if (widthFactor > heightFactor) {
 		cellSize = Math.floor(cellSize / widthFactor);
@@ -1301,35 +1188,29 @@ function GameGrid(divID, options) {
 		cellSize = Math.floor(cellSize / heightFactor);	
 	}
 	
+	canvasWidth = divWidth;
+	canvasHeight = divHeight;
+	
 	gridColumns = Math.floor((canvasWidth - lineWidth) / (cellSize + lineWidth));
 	gridRows = Math.floor((canvasHeight - lineWidth) / (cellSize + lineWidth));
 
 	repaint();	
 	
-	function canvasClicked(e) {
-		var point = getClickedPointOnCanvas(e);
+	function gridClicked(event) {
+		var point = renderer.getClickedPoint(event);
 		eventEmitter.emit("canvasClicked", point);
 		var gridCoordinate = getGridCoordinate(point);
 		eventEmitter.emit("gridCoordinateClicked", gridCoordinate);
 		var gameCoordinate = getGameCoordinate(gridCoordinate);
 		eventEmitter.emit("gameCoordinateClicked", gameCoordinate);
-		var url = that.getGridImage(gridCoordinate.x, gridCoordinate.y);
-		if (url)
-			eventEmitter.emit("imageClicked", url);
+		var gridImage = that.getGridImage(gridCoordinate.x, gridCoordinate.y);
+		if (gridImage)
+			eventEmitter.emit("gridImageClicked", gridImage);
 	}
 		
-	canvas.addEventListener("mousedown", canvasClicked);
+	renderer.element.addEventListener("mousedown", gridClicked);
+	window.onresize = windowResized;
 }
 
-/*
-	var canvas2 = $('<canvas/>').attr({
-		width : 100,
-		height : 200,
-		id : "bla"
-	}).appendTo('body');
-	context = canvas2.get(0).getContext("2d");
-	context.fillStyle = "#d00";
-	context.fillRect(0, 0, 100, 200);
-*/
 
 	//http://adomas.org/javascript-mouse-wheel/
