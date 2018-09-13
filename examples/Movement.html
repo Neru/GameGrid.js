@@ -1,0 +1,70 @@
+<html>  
+  <head>
+    <title>Movement and Rotation</title>
+	<style>
+		#mygrid {
+			width: 100%;
+			height: 100%;
+		}
+	</style>
+  </head>
+  <body>
+    <div id="mygrid"></div>
+	<script type="text/javascript" src="../GameGrid.js"></script>
+	<script type="text/javascript" src="../SVGRenderer.js"></script>
+	<script type="text/javascript" src="../CanvasRenderer.js"></script>
+    <script type="text/javascript" src="../lib/EventEmitter.js"></script>
+    <script type="text/javascript" src="../lib/gl-matrix.js"></script>
+    <script type="text/javascript">
+        const ORIENTATIONS = {
+            UP: {"angle": 0, "key": "w"},
+            RIGHT: {"angle": 90, "key": "d"},
+            DOWN: {"angle": 180, "key": "s"},
+            LEFT: {"angle": 270, "key": "a"}
+        };
+
+        const orientationsByKeys = {};
+
+        Object.values(ORIENTATIONS).forEach(orientation => {
+            orientationsByKeys[orientation.key] = orientation;
+        });
+
+        let orientation = ORIENTATIONS.RIGHT;
+        let position = {
+            x: 2,
+            y: 1
+        };
+
+		async function init() {
+			var options = {
+				renderer: SVGRenderer
+			};
+
+			var gameGrid = new GameGrid("mygrid", options);
+			await gameGrid.addGridImage(position.x, position.y, "../res/triangle.svg", orientation.angle);
+
+            window.onkeypress = keyPressed;
+
+            async function keyPressed(evt) {
+                const key = evt.key;
+
+                if (key === orientation.key) {
+                    const oldPosition = position;
+                    position = {
+                        x: Math.round(position.x + Math.sin(orientation.angle * TO_RADIANS)),
+                        y: Math.round(position.y - Math.cos(orientation.angle * TO_RADIANS))
+                    };
+
+                    await gameGrid.moveGridImage(oldPosition.x, oldPosition.y, position.x, position.y);
+                } else {
+                    orientation = orientationsByKeys[key];
+
+                    await gameGrid.rotateGridImage(position.x, position.y, orientation.angle);
+                }
+            }
+		}
+
+		init();
+    </script>
+  </body>
+</html>

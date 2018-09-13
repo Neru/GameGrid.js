@@ -1,5 +1,26 @@
 const TO_RADIANS = Math.PI/180; 
 
+//TODO: compare new cell content with existing and redraw when changed
+
+function drawRect(context, x, y, width, height, background) {
+    context.fillStyle = "#FFFFFF";
+    context.globalAlpha = 1;
+    context.fillRect(x, y, width, height);
+    context.fillStyle = background.color;
+    context.globalAlpha = background.opacity;
+    context.fillRect(x, y, width, height);
+}
+
+//source: https://gamedev.stackexchange.com/questions/67274/is-it-possible-to-rotate-an-image-on-an-html5-canvas-without-rotating-the-whole
+function drawImage(context, x, y, size, gridImage) {
+    context.save();
+    context.translate(x + size/2, y + size/2);
+    context.rotate(gridImage.angle * TO_RADIANS);
+    context.globalAlpha = 1;
+    context.drawImage(gridImage.element, -size/2, -size/2, size, size);
+    context.restore();
+}
+
 class CanvasRenderer {
 
 	constructor(gridProperties) {
@@ -18,14 +39,7 @@ class CanvasRenderer {
 	}
 	
 	drawBackgroundColor(canvasWidth, canvasHeight, background) {
-		const context = this.context;
-		
-		context.fillStyle = "#FFFFFF";
-		context.globalAlpha = 1;
-		context.fillRect(0, 0, canvasWidth, canvasHeight);
-		context.fillStyle = background.color;
-		context.globalAlpha = background.opacity;
-		context.fillRect(0, 0, canvasWidth, canvasHeight);
+        drawRect(this.context, 0, 0, canvasWidth, canvasHeight, background);
 	};
 	
 	drawBackgroundImage(canvasWidth, canvasHeight, background) {
@@ -33,6 +47,7 @@ class CanvasRenderer {
 		const img = Image();
 		
 		img.onload = function() {
+			context.globalAlpha = background.opacity;
 			context.drawImage(img, 0, 0, canvasWidth, canvasHeight);
 		};
 		img.src = background.url;
@@ -62,26 +77,38 @@ class CanvasRenderer {
 		}
 		context.stroke();
 	}
-	
-	drawGridImage(x, y, size, gridImage) {
+
+    addGridImage(x, y, size, gridImage) {
 		const context = this.context;
 		
 		return new Promise(function(resolve, reject) {
 			var img = new Image();
 			img.onload = function() {
-				//source: https://gamedev.stackexchange.com/questions/67274/is-it-possible-to-rotate-an-image-on-an-html5-canvas-without-rotating-the-whole
-				context.save(); 
-				context.translate(x + size/2, y + size/2);
-				context.rotate(gridImage.angle * TO_RADIANS);
-				context.drawImage(img, -size/2, -size/2, size, size);
-				context.restore(); 
+                gridImage.element = img;
+                drawImage(context, x, y, size, gridImage);
+
 				resolve(img);
-			}
+			};
+
 			img.onerror = reject;
 			img.src = gridImage.url;
 		});
 	}
-	
+
+    removeGridImage(x, y, size, gridImage, background) {
+        drawRect(this.context, x, y, size, size, background);
+    }
+
+    moveGridImage(oldX, oldY, x, y, size, gridImage, background) {
+        drawRect(this.context, oldX, oldY, size, size, background);
+	    drawImage(this.context, x, y, size, gridImage);
+    }
+
+    rotateGridImage(x, y, size, gridImage, background) {
+        drawRect(this.context, x, y, size, size, background);
+        drawImage(this.context, x, y, size, gridImage);
+    }
+
 	getClickedPoint(event) {
 		const canvas = this.canvas;
 		

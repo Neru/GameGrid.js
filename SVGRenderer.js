@@ -46,38 +46,64 @@ class SVGRenderer {
 				
 				rect.setAttribute("stroke", lineColor);
 				rect.setAttribute("stroke-width", 1);
-				rect.setAttribute("stroke-opacity", lineOpacity);
+				//rects overlap each other
+				rect.setAttribute("stroke-opacity", lineOpacity / 2);
 
-				
 				svg.appendChild(rect);
 			}
 		}
 	}
-	
-	drawGridImage(x, y, size, gridImage) {
-		const svg = this.svg;
-		
-		return new Promise(function(resolve, reject) {
-			var image = document.createElementNS("http://www.w3.org/2000/svg", "image");
-			
-			image.onload = function() {
-				svg.appendChild(image);
-				resolve();
-			};
-			image.onerror = reject;
-			
-			image.setAttribute("x", x);
-			image.setAttribute("y", y);
-			image.setAttribute("height", size);
-			image.setAttribute("width", size);
 
-			var translateX = x + size/2;
-			var translateY = y + size/2;
-			
-			image.setAttribute("transform", `translate(${translateX},${translateY}) rotate(${gridImage.angle}) translate(${-translateX},${-translateY})`)
-			image.setAttribute("href", gridImage.url);
-		});
-	}
+    addGridImage(x, y, size, gridImage) {
+        const svg = this.svg;
+
+        return new Promise(function(resolve, reject) {
+            const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+            gridImage.element = image;
+
+            image.onload = function() {
+                svg.appendChild(image);
+                resolve(image);
+            };
+            image.onerror = reject;
+
+            image.setAttribute("x", -size/2);
+            image.setAttribute("y", -size/2);
+            image.setAttribute("height", size);
+            image.setAttribute("width", size);
+
+            const translateX = x + size/2;
+            const translateY = y + size/2;
+            image.setAttribute("transform", `translate(${translateX},${translateY}) rotate(${gridImage.angle})`);
+
+            image.setAttribute("href", gridImage.url);
+        });
+    }
+
+    removeGridImage(x, y, size, gridImage) {
+        const svg = this.svg;
+        const image = gridImage.element;
+        svg.removeChild(image);
+    }
+
+    moveGridImage(oldX, oldY, x, y, cellSize, gridImage) {
+        const image = gridImage.element;
+        const transform = image.getAttribute("transform");
+        const rotateString = transform.split(" ")[1];
+
+        const translateX = x + cellSize/2;
+        const translateY = y + cellSize/2;
+
+        image.setAttribute("transform", `translate(${translateX},${translateY}) ${rotateString}`);
+    }
+
+    rotateGridImage(x, y, size, gridImage) {
+        const image = gridImage.element;
+        const transform = image.getAttribute("transform");
+        const translateString = transform.split(" ")[0];
+
+        image.setAttribute("transform", `${translateString} rotate(${gridImage.angle})`);
+    }
 	
 	getClickedPoint(event) {
 		const svg = this.svg;

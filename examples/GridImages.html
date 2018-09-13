@@ -18,7 +18,7 @@
     <script type="text/javascript">
 		async function init() {
 			var options = {
-				renderer: SVGRenderer
+				renderer: CanvasRenderer
 			}
 
 			var gameGrid = new GameGrid("mygrid", options);
@@ -26,7 +26,7 @@
 
 			console.log(gameGrid.getGridImage(2, 1));
 
-			await gameGrid.rotateGridImage(2, 1, -90);
+			await gameGrid.rotateGridImage(2, 1, 90);
 
 			console.log(gameGrid.getGridImage(2, 1));
 

@@ -139,7 +139,8 @@ function GameGrid(divID, options = {}) {
 		    return;
 
 		renderer.drawGrid(xShift, yShift, gridWidth, gridHeight, gridColums, gridRows, cellSize, lineWidth, lineColor, lineOpacity);
-		
+
+		/*
 		//draw images for each grid cell
 		var imagesToDraw = [];
 		var gridImage, imageToDraw, imageX, imageY;
@@ -157,8 +158,9 @@ function GameGrid(divID, options = {}) {
 				}
 			}
 		}
-		
 		return Promise.all(imagesToDraw);
+
+		*/
 	};
 	
 	var minMaxCheck = function (min, max, newValue) {
@@ -1067,30 +1069,65 @@ function GameGrid(divID, options = {}) {
 		that.setLineOpacity(newLineOpacity);
 		repaint();
 	};
-	
+
+	function addGridImage(xCoord, yCoord, gridImage) {
+        gridImages[xCoord] = gridImages[xCoord] ? gridImages[xCoord] : {};
+        gridImages[xCoord][yCoord] = gridImage;
+	}
+
+	function getGridImageCoordinates(xCoord, yCoord) {
+        const xShift = that.getXShift();
+        const yShift = that.getYShift();
+
+        const imageX = xShift + lineWidth + xCoord * (cellSize + lineWidth);
+        const imageY = yShift + lineWidth + yCoord * (cellSize + lineWidth);
+
+        return [imageX, imageY];
+    }
+
+	function removeGridImage(xCoord, yCoord) {
+        if (gridImages[xCoord] === undefined || gridImages[xCoord][yCoord] === undefined) {
+            throw "An image does not exist at this position.";
+        }
+
+        delete gridImages[xCoord][yCoord];
+
+        if (Object.keys(gridImages[xCoord]).length === 0)
+            delete gridImages[xCoord];
+	}
+
 	this.addGridImage = async function (xCoord, yCoord, imageURL, angle = 0) {
-		gridImages[xCoord] = gridImages[xCoord] ? gridImages[xCoord] : {};
-		gridImages[xCoord][yCoord] = {
-			"url": imageURL,
-			"angle": angle
-		};
-		
-		return repaint();
+        const gridImage = {
+            "url": imageURL,
+            "angle": angle
+        };
+
+        addGridImage(xCoord, yCoord, gridImage);
+
+        [imageX, imageY] = getGridImageCoordinates(xCoord, yCoord);
+
+		return renderer.addGridImage(imageX, imageY, cellSize, gridImage);
 	};
 	
 	this.rotateGridImage = async function (xCoord, yCoord, angle) {
 		var gridImage = that.getGridImage(xCoord, yCoord);
 		gridImage["angle"] = angle;
+
+        [imageX, imageY] = getGridImageCoordinates(xCoord, yCoord);
 		
-		return repaint();
+		return renderer.rotateGridImage(imageX, imageY, cellSize, gridImage, background);
 	};
 	
 	this.moveGridImage = async function (oldXCoord, oldYCoord, xCoord, yCoord) {
-		var gridImage = that.getGridImage(oldXCoord, oldYCoord);
-		that.removeGridImage(oldXCoord, oldYCoord);
-		that.addGridImage(xCoord, yCoord, gridImage.url, gridImage.angle);
-		
-		return repaint();
+		const gridImage = that.getGridImage(oldXCoord, oldYCoord);
+
+		removeGridImage(oldXCoord, oldYCoord);
+		addGridImage(xCoord, yCoord, gridImage);
+
+        [oldImageX, oldImageY] = getGridImageCoordinates(oldXCoord, oldYCoord);
+        [imageX, imageY] = getGridImageCoordinates(xCoord, yCoord);
+
+        return renderer.moveGridImage(oldImageX, oldImageY, imageX, imageY, cellSize, gridImage, background);
 	};
 	
 	this.getGridImage = function (xCoord, yCoord) {
@@ -1098,16 +1135,9 @@ function GameGrid(divID, options = {}) {
 	};
 	
 	this.removeGridImage = async function (xCoord, yCoord) {
-		if (gridImages[xCoord] === undefined || gridImages[xCoord][yCoord] === undefined) {
-			throw "An image does not exist at this position.";
-		}
+		removeGridImage(xCoord, yCoord);
 		
-		delete gridImages[xCoord][yCoord];
-		
-		if (Object.keys(gridImages[xCoord]).length === 0)
-			delete gridImages[xCoord];
-		
-		return repaint();
+		return renderer.removeGridImage(xCoord, yCoord, cellSize, gridImage, background);
 	};
 	
 	this.moveGrid = function (x, y) {
