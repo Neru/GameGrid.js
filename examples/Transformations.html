@@ -1,0 +1,64 @@
+<html>
+<head>
+    <title>Transformations</title>
+    <style>
+        #gamegrid {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="gamegrid"></div>
+<script type="text/javascript" src="../Difference.js"></script>
+<script type="text/javascript" src="../GameGrid.js"></script>
+<script type="text/javascript" src="../SVGRenderer.js"></script>
+<script type="text/javascript" src="../CanvasRenderer.js"></script>
+<script type="text/javascript" src="../lib/EventEmitter.js"></script>
+<script type="text/javascript">
+
+    async function init() {
+        const options = {
+            renderer: SVGRenderer,
+            gridImages: [
+                {"x": 2, "y": 1, "url": "../res/triangle.svg", "angle": 90},
+                {"x": -2, "y": 1, "url": "../res/square.png"}
+            ]
+        };
+
+        const gameGrid = new GameGrid("gamegrid", options);
+
+
+        window.setTimeout(() => {
+            gameGrid.rotateGrid(90);
+        }, 1000);
+
+
+        let mouseCoords;
+
+        window.onmousedown = function(e) {
+            if (e.button === 0) {
+                mouseCoords = {
+                    x: e.pageX,
+                    y: e.pageY
+                }
+            }
+        };
+
+        window.onmousemove = e => {
+            if (!mouseCoords)
+                return;
+
+            gameGrid.translateView(mouseCoords.x - e.pageX, mouseCoords.y - e.pageY);
+        };
+
+        window.onmouseup = e => {
+            gameGrid.updateView(mouseCoords.x - e.pageX, mouseCoords.y - e.pageY);
+            mouseCoords = undefined;
+        };
+    }
+
+    init();
+</script>
+</body>
+</html>

@@ -10,21 +10,29 @@
   </head>
   <body>
     <div id="mygrid"></div>
+    <script type="text/javascript" src="../Difference.js"></script>
 	<script type="text/javascript" src="../GameGrid.js"></script>
 	<script type="text/javascript" src="../SVGRenderer.js"></script>
 	<script type="text/javascript" src="../CanvasRenderer.js"></script>
     <script type="text/javascript" src="../lib/EventEmitter.js"></script>
-    <script type="text/javascript" src="../lib/gl-matrix.js"></script>
     <script type="text/javascript">
 		async function init() {
 			var options = {
-				renderer: CanvasRenderer
-			}
+				renderer: SVGRenderer
+			};
 
-			var gameGrid = new GameGrid("mygrid", options);
+            const gameGrid = new GameGrid("mygrid", options);
 			await gameGrid.addGridImage(2, 1, "../res/triangle.svg");
 
-			console.log(gameGrid.getGridImage(2, 1));
+            //const canvas = new OffscreenCanvas(100, 100);
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'green';
+            ctx.fillRect(10, 10, 100, 100);
+
+            //await gameGrid.addGridImage(2, 1, canvas);
+
+			/*console.log(gameGrid.getGridImage(2, 1));
 
 			await gameGrid.rotateGridImage(2, 1, 90);
 
@@ -33,7 +41,7 @@
 			await gameGrid.moveGridImage(2, 1, 3, 1);
 
 			console.log(gameGrid.getGridImage(2, 2));
-			//gameGrid.removeGridImage(2, 1);
+			//gameGrid.removeGridImage(2, 1);*/
 		}
 		
 		init();

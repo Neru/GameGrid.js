@@ -13,8 +13,8 @@
 	<script type="text/javascript" src="../GameGrid.js"></script>
 	<script type="text/javascript" src="../SVGRenderer.js"></script>
 	<script type="text/javascript" src="../CanvasRenderer.js"></script>
+    <script type="text/javascript" src="../Difference.js"></script>
     <script type="text/javascript" src="../lib/EventEmitter.js"></script>
-    <script type="text/javascript" src="../lib/gl-matrix.js"></script>
     <script type="text/javascript">
         const ORIENTATIONS = {
             UP: {"angle": 0, "key": "w"},
@@ -37,11 +37,14 @@
 
 		async function init() {
 			var options = {
-				renderer: SVGRenderer
+				renderer: CanvasRenderer,
+                gridImages: [
+                    {"x": position.x, "y": position.y, "url": "../res/triangle.svg", "angle": orientation.angle},
+                    {"x": -2, "y": position.y, "url": "../res/square.png"}
+                ]
 			};
 
 			var gameGrid = new GameGrid("mygrid", options);
-			await gameGrid.addGridImage(position.x, position.y, "../res/triangle.svg", orientation.angle);
 
             window.onkeypress = keyPressed;
 
@@ -54,6 +57,16 @@
                         x: Math.round(position.x + Math.sin(orientation.angle * TO_RADIANS)),
                         y: Math.round(position.y - Math.cos(orientation.angle * TO_RADIANS))
                     };
+
+                    if (position.x <= 1) {
+                        await gameGrid.translateView(-1, 0);
+                    } else if (position.x >= gameGrid.getGridColumns() - 1) {
+                        await gameGrid.translateView(1, 0);
+                    } else if (position.y <= 1) {
+                        await gameGrid.translateView(0, -1);
+                    } else if (position.x >= gameGrid.getGridRows() - 1) {
+                        await gameGrid.translateView(0, 1);
+                    }
 
                     await gameGrid.moveGridImage(oldPosition.x, oldPosition.y, position.x, position.y);
                 } else {
