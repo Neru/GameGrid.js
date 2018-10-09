@@ -1210,12 +1210,13 @@ function GameGrid(divID, options = {}) {
     }
 
     function newGridImage(imageURLOrCanvas, angle = 0) {
-        if (imageURLOrCanvas.endsWith("svg")) {
-            return new SVGImage(imageURLOrCanvas, angle);
+        //TODO: imageURLOrCanvas.toString() === "[object OffscreenCanvas]"
+        if (imageURLOrCanvas.tagName === "CANVAS") {
+            return new CanvasImage(imageURLOrCanvas, angle);
         }
 
-        if (imageURLOrCanvas.toString() === "[object OffscreenCanvas]" || imageURLOrCanvas.tagName === "CANVAS") {
-            return new CanvasImage(imageURLOrCanvas, angle);
+        if (imageURLOrCanvas.endsWith("svg")) {
+            return new SVGImage(imageURLOrCanvas, angle);
         }
 
         return new RasterImage(imageURLOrCanvas, angle);

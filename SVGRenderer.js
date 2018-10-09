@@ -1,26 +1,71 @@
-function addImage(group, x, y, size, gridImage, gridImageToRemove, getHref) {
+function svgElement(name) {
+    return document.createElementNS("http://www.w3.org/2000/svg", name)
+}
+
+function createUseElement(existingUseElement, href, x, y, size, angle) {
+    const use = existingUseElement || svgElement("use");
+
+    const translateX = x + size/2;
+    const translateY = y + size/2;
+
+    use.setAttribute("href", "#" + href);
+
+    use.setAttribute("x", -size/2);
+    use.setAttribute("y", -size/2);
+    use.setAttribute("preserveAspectRatio", "none");
+
+    use.setAttribute("transform", `translate(${translateX},${translateY}) rotate(${angle})`);
+
+    return use;
+}
+
+function addGridImage(defs, group, id, loadImagePromise, x, y, size, angle, gridImageToRemove) {
+    const elem = defs.querySelector("[id='" + id + "']") ;
+    let promise;
+
+    if (elem)
+        promise = Promise.resolve();
+    else
+        promise = loadImagePromise.then(svgElem => {
+            svgElem.id = id;
+            svgElem.setAttribute("height", size);
+            svgElem.setAttribute("width", size);
+
+            return Promise.resolve();
+        });
+
+    return promise.then(() => {
+        const useElem = createUseElement(gridImageToRemove, id, x, y, size, angle);
+        group.appendChild(useElem);
+
+        return Promise.resolve(useElem);
+    })
+}
+
+function loadSVGImage(defs, svgURL) {
     return new Promise((resolve, reject) => {
-        let image = gridImageToRemove;
+        fetch(svgURL).then(response => {
+            return response.text();
+        }).then(svgText => {
+            defs.insertAdjacentHTML("beforeend", svgText);
+            const svgElem = defs.lastChild;
 
-        if (!image) {
-            image = document.createElementNS("http://www.w3.org/2000/svg", "image");
-            group.appendChild(image);
-        }
+            resolve(svgElem);
+        }).catch(reject);
+    });
+}
 
-        image.onload = resolve;
+function loadImage(defs, href) {
+    return new Promise((resolve, reject) => {
+        let image = svgElement("image");
+
+        image.onload = () => {
+            resolve(image);
+        };
         image.onerror = reject;
 
-        image.setAttribute("x", -size/2);
-        image.setAttribute("y", -size/2);
-        image.setAttribute("height", size);
-        image.setAttribute("width", size);
-
-        const translateX = x + size/2;
-        const translateY = y + size/2;
-        image.setAttribute("transform", `translate(${translateX},${translateY}) rotate(${gridImage.angle})`);
-
-        let href = getHref();
         image.setAttribute("href", href);
+        defs.appendChild(image);
     });
 }
 
@@ -28,14 +73,18 @@ function addImage(group, x, y, size, gridImage, gridImageToRemove, getHref) {
 class SVGRenderer {
     
     constructor(gridProperties) {
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        let svg = svgElement("svg");
         svg.setAttribute("width", gridProperties.width);
         svg.setAttribute("height", gridProperties.height);
 
-        const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const defs = svgElement("defs");
+        svg.appendChild(defs);
+
+        const group = svgElement("g");
         svg.appendChild(group);
 
         this.svg = svg;
+        this.defs = defs;
         this.group = group;
     }
     
@@ -74,7 +123,7 @@ class SVGRenderer {
                     rectReused = true;
                 else {
                     rectReused = false;
-                    rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    rect = svgElement("rect");
                 }
                 rect.setAttribute("x", xCoord*(cellSize + 1) + 0.75);
                 rect.setAttribute("y", yCoord*(cellSize + 1) + 0.75);
@@ -148,49 +197,32 @@ class SVGRenderer {
     }
 
     addRasterImage(x, y, size, gridImage, gridImageToRemove) {
+        const defs = this.defs;
         const group = this.group;
 
-        const getHref = (gridImage) => {
-            return gridImage.url;
-        };
+        const loadImagePromise = loadImage(defs, gridImage.url);
 
-        return addImage(group, x, y, size, gridImage, gridImageToRemove, getHref);
-    }
-
-    addSVGImage(x, y, size, gridImage, gridImageToRemove) {
-        const group = this.group;
-
-        return new Promise((resolve, reject) => {
-            fetch(gridImage.url).then(response => {
-                return response.text();
-            }).then(svgText => {
-                group.insertAdjacentHTML("beforeend", "<g>" + svgText + "</g>");
-                const svgElem = group.lastChild;
-
-                svgElem.setAttribute("x", -size/2);
-                svgElem.setAttribute("y", -size/2);
-                svgElem.setAttribute("height", size);
-                svgElem.setAttribute("width", size);
-
-                //use use :)
-
-                const translateX = x + size/2;
-                const translateY = y + size/2;
-                svgElem.setAttribute("transform", `translate(${translateX},${translateY}) rotate(${gridImage.angle})`);
-
-                resolve(svgElem);
-            }).catch(reject);
-        });
+        return addGridImage(defs, group, gridImage.url, loadImagePromise, x, y, size, gridImage.angle, gridImageToRemove);
     }
 
     addCanvasImage(x, y, size, gridImage, gridImageToRemove) {
+        const defs = this.defs;
         const group = this.group;
 
-        var getHref = (gridImage) => {
-            return gridImage.canvas.toDataURL();
-        };
+        const href = gridImage.canvas.toDataURL();
 
-        return addImage(group, x, y, size, gridImage, gridImageToRemove, getHref);
+        const loadImagePromise = loadImage(defs, href);
+
+        return addGridImage(defs, group, gridImage.url, loadImagePromise, x, y, size, gridImage.angle, gridImageToRemove);
+    }
+
+    addSVGImage(x, y, size, gridImage, gridImageToRemove) {
+        const defs = this.defs;
+        const group = this.group;
+
+        const loadImagePromise = loadSVGImage(defs, gridImage.url);
+
+        return addGridImage(defs, group, gridImage.url, loadImagePromise, x, y, size, gridImage.angle, gridImageToRemove);
     }
 
     removeGridImage(x, y, size, gridImage) {

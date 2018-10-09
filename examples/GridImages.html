@@ -20,17 +20,21 @@
 			var options = {
 				renderer: SVGRenderer
 			};
-
             const gameGrid = new GameGrid("mygrid", options);
+
+            await gameGrid.addGridImage(1, 1, "../res/square.png");
+            
 			await gameGrid.addGridImage(2, 1, "../res/triangle.svg");
 
             //const canvas = new OffscreenCanvas(100, 100);
             const canvas = document.createElement("canvas");
+            canvas.width = 100;
+            canvas.height = 100;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = 'green';
-            ctx.fillRect(10, 10, 100, 100);
+            ctx.fillRect(10, 10, 90, 90);
 
-            //await gameGrid.addGridImage(2, 1, canvas);
+            await gameGrid.addGridImage(3, 1, canvas);
 
 			/*console.log(gameGrid.getGridImage(2, 1));
 
